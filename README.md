@@ -4,17 +4,7 @@
 
 ## 系统架构
 
-```
-┌─────────────────┐       HTTP        ┌─────────────────┐
-│  PyQt5 桌面前端  │  ◄──────────────►  │  Flask REST 后端  │
-│  (GUI 交互界面)  │   127.0.0.1:5000  │  (OCR + 批改引擎) │
-└─────────────────┘                   └────────┬────────┘
-                                               │
-                                  ┌────────────┼────────────┐
-                                  │            │            │
-                              PaddleOCR    OpenCV      SQLite
-                              文字识别    图像预处理    数据持久化
-```
+![系统架构图](assets/readme1.png)
 
 ## 主要功能
 
@@ -41,37 +31,7 @@
 
 ## 项目结构
 
-```
-homework_ocr_grader/
-├── launcher.py              # 统一启动器（后端+前端）
-├── requirements.txt         # Python 依赖
-├── build_exe.py             # Windows 打包脚本
-├── backend/
-│   ├── app.py               # Flask 主应用 & API 路由
-│   ├── config.py            # 后端配置（端口、阈值等）
-│   ├── database.py          # SQLAlchemy 模型 & 数据库操作
-│   ├── core/
-│   │   ├── ocr_engine.py    # PaddleOCR 封装
-│   │   ├── preprocessor.py  # 图像预处理流水线
-│   │   ├── parser.py        # OCR 结果解析（题号提取）
-│   │   ├── grader.py        # 批改逻辑（三种题型）
-│   │   └── exporter.py      # CSV/HTML 报告导出
-│   └── models/              # 数据模型定义
-├── frontend/
-│   ├── main.py              # 前端入口
-│   ├── config.py            # 前端配置
-│   ├── api_client.py        # HTTP 客户端封装
-│   └── ui/                  # UI 组件
-│       ├── main_window.py   # 主窗口
-│       ├── image_panel.py   # 图像预览面板
-│       ├── answer_panel.py  # 标准答案编辑面板
-│       ├── result_panel.py  # 批改结果面板
-│       └── history_panel.py # 历史记录面板
-├── models/                  # 预训练 OCR 模型
-│   ├── PP-OCRv5_server_det/ # 文本检测模型
-│   └── PP-OCRv5_server_rec/ # 文本识别模型
-└── templates/               # 答案模板示例
-```
+![项目结构图](assets/readme2.png)
 
 ## 快速开始
 
