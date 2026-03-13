@@ -1,6 +1,9 @@
 """
-手写作业OCR识别与批改系统 - 统一启动器
-双击即用：自动启动后端服务 + 前端GUI
+* 手写作业OCR识别与批改系统 - 统一启动器
+* 双击即用：自动启动后端服务 + 前端GUI
+* create by 林文光
+* copyright USTC
+* 2026.03.07
 """
 import sys
 import os
