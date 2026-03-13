@@ -17,9 +17,9 @@ from api_client import ApiClient
 """
 * GradeWorker class
 * 批改后台线程，在子线程中通过API调用后端执行OCR识别与批改，避免阻塞UI
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.04
 """
 class GradeWorker(QThread):
     finished = pyqtSignal(dict)
@@ -45,9 +45,9 @@ class GradeWorker(QThread):
 """
 * MainWindow class
 * 应用程序主窗口，集成图片预览、答案编辑、批改结果和历史记录等功能面板
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.04
 """
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):

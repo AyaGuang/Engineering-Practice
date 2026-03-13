@@ -10,9 +10,9 @@ BASE = config.API_BASE_URL
 """
 * ApiClient class
 * 后端API客户端封装，通过HTTP请求调用Flask后端的各项接口（上传、OCR、批改、导出、历史查询等）
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.01
 """
 class ApiClient:
 

@@ -11,9 +11,9 @@ from PyQt5.QtCore import Qt, QDate, pyqtSignal
 """
 * HistoryPanel class
 * 历史记录面板，支持按文件名、日期、分数范围检索批改历史，提供分页浏览和删除功能
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.03
 """
 class HistoryPanel(QWidget):
     detail_requested = pyqtSignal(dict)  # 点击查看详情时发射
@@ -277,9 +277,9 @@ class HistoryPanel(QWidget):
 """
 * DetailDialog class
 * 批改详情对话框，弹窗展示单次批改的完整信息，包括每题识别结果和得分明细
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.03
 """
 class DetailDialog(QDialog):
 

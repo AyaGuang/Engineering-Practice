@@ -10,9 +10,9 @@ from PyQt5.QtCore import Qt, pyqtSignal
 """
 * ImagePanel class
 * 图片预览面板，支持加载显示作业图片、原图与处理图切换、OCR识别文字展示
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.03
 """
 class ImagePanel(QWidget):
     image_loaded = pyqtSignal(str)  # 发射图片路径

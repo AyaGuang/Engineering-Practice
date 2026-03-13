@@ -21,9 +21,9 @@ VALUE_TYPE_MAP = {v: k for k, v in TYPE_VALUE_MAP.items()}
 """
 * QuestionData class
 * 前端用的轻量级题目数据类，存储题号、题型、标准答案和分值
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.02
 """
 @dataclass
 class QuestionData:
@@ -40,9 +40,9 @@ class QuestionData:
 """
 * AnswerPanel class
 * 标准答案编辑面板，提供答案模板的增删改查、保存和加载功能
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.02
 """
 class AnswerPanel(QWidget):
 

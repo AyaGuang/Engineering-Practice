@@ -8,9 +8,9 @@ from PyQt5.QtCore import Qt
 """
 * ResultPanel class
 * 批改结果展示面板，以表格形式展示每题的识别文本、匹配度和得分，并汇总总分
-* create by XXX
+* create by 林嘉晨
 * copyright USTC
-* 时间
+* 2026.02.05
 """
 class ResultPanel(QWidget):
 
