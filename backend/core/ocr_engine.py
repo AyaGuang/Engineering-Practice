@@ -1,4 +1,10 @@
-"""PaddleOCR封装模块"""
+"""
+* QuestionResultRecord class
+* PaddleOCR封装模块
+* create by 廖帅
+* copyright USTC
+* 2026.02.23
+"""
 import os
 from typing import List, Union
 import numpy as np

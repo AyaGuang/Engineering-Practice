@@ -1,4 +1,10 @@
-"""OCR结果解析模块 - 将OCR文本解析为题号-答案对"""
+"""
+* QuestionResultRecord class
+* OCR结果解析模块 - 将OCR文本解析为题号-答案对
+* create by 廖帅
+* copyright USTC
+* 2026.02.23
+"""
 import re
 from typing import Dict, List
 

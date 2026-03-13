@@ -1,4 +1,10 @@
-"""Flask后端 - 提供OCR识别与批改API"""
+"""
+* QuestionResultRecord class
+* Flask后端 - 提供OCR识别与批改API
+* create by 廖帅
+* copyright USTC
+* 2026.02.22
+"""
 import os
 import json
 import uuid

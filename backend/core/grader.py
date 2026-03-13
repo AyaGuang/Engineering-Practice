@@ -1,4 +1,10 @@
-"""批改引擎 - 支持填空题、选择题、计算题"""
+"""
+* QuestionResultRecord class
+* 批改引擎 - 支持填空题、选择题、计算题
+* create by 廖帅
+* copyright USTC
+* 2026.02.23
+"""
 import re
 import ast
 import operator

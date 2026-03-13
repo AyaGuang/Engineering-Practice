@@ -19,9 +19,9 @@ Base = declarative_base()
 """
 * Homework class
 * 作业上传记录ORM模型，映射homeworks表，存储上传的作业图片信息
-* create by XXX
+* create by 廖帅
 * copyright USTC
-* 时间
+* 2026.02.06
 """
 class Homework(Base):
     __tablename__ = 'homeworks'
@@ -49,9 +49,9 @@ class Homework(Base):
 """
 * GradingRecord class
 * 批改记录ORM模型，映射grading_records表，存储每次批改的总分、得分和得分率
-* create by XXX
+* create by 廖帅
 * copyright USTC
-* 时间
+* 2026.02.06
 """
 class GradingRecord(Base):
     __tablename__ = 'grading_records'
@@ -87,9 +87,9 @@ class GradingRecord(Base):
 """
 * QuestionResultRecord class
 * 每题批改结果ORM模型，映射question_results表，记录每道题的识别文本、标准答案和得分
-* create by XXX
+* create by 廖帅
 * copyright USTC
-* 时间
+* 2026.02.06
 """
 class QuestionResultRecord(Base):
     __tablename__ = 'question_results'
