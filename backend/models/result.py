@@ -6,9 +6,9 @@ from .question import Question
 """
 * QuestionResult class
 * 单题批改结果数据类，记录识别文本、是否正确、匹配度和得分
-* create by XXX
+* create by 林睿埼
 * copyright USTC
-* 时间
+* 2026.02.05
 """
 @dataclass
 class QuestionResult:
@@ -22,9 +22,9 @@ class QuestionResult:
 """
 * GradingReport class
 * 批改报告数据类，汇总所有题目的批改结果，计算总分和得分率
-* create by XXX
+* create by 林睿埼
 * copyright USTC
-* 时间
+* 2026.02.05
 """
 @dataclass
 class GradingReport:

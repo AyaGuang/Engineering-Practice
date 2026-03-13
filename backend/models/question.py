@@ -6,9 +6,9 @@ from typing import List, Optional
 """
 * QuestionType class
 * 题目类型枚举类，定义填空题、选择题、计算题三种题型及其显示名称
-* create by XXX
+* create by 林睿埼
 * copyright USTC
-* 时间
+* 2026.02.05
 """
 class QuestionType(Enum):
     FILL_BLANK = "fill_blank"
@@ -28,9 +28,9 @@ class QuestionType(Enum):
 """
 * Question class
 * 题目数据类，包含题号、题型、标准答案、分值及可接受的替代答案
-* create by XXX
+* create by 林睿埼
 * copyright USTC
-* 时间
+* 2026.02.05
 """
 @dataclass
 class Question:
@@ -44,9 +44,9 @@ class Question:
 """
 * OcrResult class
 * OCR识别结果数据类，存储文本区域的边界框坐标、识别文本及置信度
-* create by XXX
+* create by 林睿埼
 * copyright USTC
-* 时间
+* 2026.02.05
 """
 @dataclass
 class OcrResult:

@@ -1,4 +1,10 @@
-"""图像预处理模块 - 灰度、降噪、纠偏、二值化"""
+"""
+* QuestionResultRecord class
+* 图像预处理模块 - 灰度、降噪、纠偏、二值化
+* create by 林睿埼
+* copyright USTC
+* 2026.02.05
+"""
 import cv2
 import numpy as np
 
