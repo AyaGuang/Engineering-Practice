@@ -1,4 +1,10 @@
-"""数据库模块单元测试"""
+"""
+* QuestionResultRecord class
+* 数据库模块单元测试
+* create by 林文光
+* copyright USTC
+* 2026.03.04
+"""
 import os
 import unittest
 from datetime import datetime
@@ -14,9 +20,9 @@ import database as db
 """
 * TestDatabase class
 * 数据库模块的单元测试类，验证作业保存、批改记录增删查、历史检索和统计功能
-* create by XXX
+* create by 林文光
 * copyright USTC
-* 时间
+* 2026.03.04
 """
 class TestDatabase(unittest.TestCase):
     @classmethod

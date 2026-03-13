@@ -7,9 +7,9 @@ from core.parser import parse_answers
 """
 * TestParser class
 * 文本解析模块的单元测试类，验证多种题号格式解析和多行答案合并等场景
-* create by XXX
+* create by 林文光
 * copyright USTC
-* 时间
+* 2026.03.05
 """
 class TestParser(unittest.TestCase):
     def _make_result(self, text, y=0, x=0):

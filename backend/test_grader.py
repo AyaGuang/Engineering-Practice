@@ -1,4 +1,9 @@
-"""批改引擎单元测试"""
+"""
+* 批改引擎单元测试
+* create by 林文光
+* copyright USTC
+* 2026.03.05
+"""
 import unittest
 from core.grader import grade_fill_blank, grade_multiple_choice, grade_calculation
 
@@ -6,9 +11,9 @@ from core.grader import grade_fill_blank, grade_multiple_choice, grade_calculati
 """
 * TestFillBlank class
 * 填空题批改逻辑的单元测试类，验证精确匹配、模糊匹配和空答案等场景
-* create by XXX
+* create by 林文光
 * copyright USTC
-* 时间
+* 2026.03.05
 """
 class TestFillBlank(unittest.TestCase):
     def test_exact_match(self):
@@ -46,9 +51,9 @@ class TestFillBlank(unittest.TestCase):
 """
 * TestMultipleChoice class
 * 选择题批改逻辑的单元测试类，验证单选、多选和文本提取等场景
-* create by XXX
+* create by 林文光
 * copyright USTC
-* 时间
+* 2026.03.05
 """
 class TestMultipleChoice(unittest.TestCase):
     def test_correct_single(self):
@@ -78,9 +83,9 @@ class TestMultipleChoice(unittest.TestCase):
 """
 * TestCalculation class
 * 计算题批改逻辑的单元测试类，验证数值比较、表达式求值和中文符号处理等场景
-* create by XXX
+* create by 林文光
 * copyright USTC
-* 时间
+* 2026.03.05
 """
 class TestCalculation(unittest.TestCase):
     def test_exact_number(self):
