@@ -1,0 +1,40 @@
+{
+  "questions": [
+    {
+      "number": 1,
+      "type": "fill_blank",
+      "answer": "北京",
+      "points": 2.0
+    },
+    {
+      "number": 2,
+      "type": "fill_blank",
+      "answer": "长方形",
+      "points": 2.0
+    },
+    {
+      "number": 3,
+      "type": "multiple_choice",
+      "answer": "B",
+      "points": 2.0
+    },
+    {
+      "number": 4,
+      "type": "multiple_choice",
+      "answer": "AC",
+      "points": 3.0
+    },
+    {
+      "number": 5,
+      "type": "calculation",
+      "answer": "15",
+      "points": 3.0
+    },
+    {
+      "number": 6,
+      "type": "calculation",
+      "answer": "24",
+      "points": 3.0
+    }
+  ]
+}

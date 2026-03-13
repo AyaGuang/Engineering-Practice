@@ -1,0 +1,15 @@
+# 后端依赖
+flask>=3.0.0
+flask-cors>=4.0.0
+sqlalchemy>=2.0.0
+paddlepaddle>=2.5.0
+paddleocr==3.4.0
+opencv-python>=4.8.0
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.21.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# 前端依赖
+PyQt5>=5.15.0
+requests>=2.31.0

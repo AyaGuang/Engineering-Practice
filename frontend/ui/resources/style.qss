@@ -1,0 +1,120 @@
+/* 全局样式 */
+QMainWindow {
+    background-color: #f5f5f5;
+}
+
+/* 面板标题 */
+QLabel#panelTitle {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    padding: 8px;
+    background-color: #e8e8e8;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+/* 总分标签 */
+QLabel#summaryLabel {
+    font-size: 16px;
+    font-weight: bold;
+    color: #2c5282;
+    background-color: #ebf4ff;
+    border: 1px solid #bee3f8;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* 工具栏 */
+QToolBar {
+    background-color: #4a90d9;
+    padding: 6px;
+    spacing: 8px;
+}
+
+QToolBar QToolButton {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+QToolBar QToolButton:hover {
+    background-color: #e3f2fd;
+    border-color: #4a90d9;
+}
+
+/* 表格 */
+QTableWidget {
+    border: 1px solid #ddd;
+    gridline-color: #e0e0e0;
+    font-size: 13px;
+}
+
+QTableWidget::item {
+    padding: 4px;
+}
+
+QHeaderView::section {
+    background-color: #4a90d9;
+    color: white;
+    padding: 6px;
+    border: none;
+    font-weight: bold;
+}
+
+/* 按钮 */
+QPushButton {
+    background-color: #4a90d9;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-size: 13px;
+}
+
+QPushButton:hover {
+    background-color: #357abd;
+}
+
+QPushButton:pressed {
+    background-color: #2a5f9e;
+}
+
+/* 下拉框 */
+QComboBox {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* 滚动区域 */
+QScrollArea {
+    border: 1px solid #ddd;
+    background-color: #fff;
+}
+
+/* 状态栏 */
+QStatusBar {
+    background-color: #e8e8e8;
+    color: #555;
+    font-size: 12px;
+}
+
+/* 单选按钮 */
+QRadioButton {
+    spacing: 5px;
+    font-size: 13px;
+}
+
+/* 菜单栏 */
+QMenuBar {
+    background-color: #f0f0f0;
+}
+
+QMenuBar::item:selected {
+    background-color: #4a90d9;
+    color: white;
+}
