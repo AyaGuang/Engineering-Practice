@@ -1,6 +1,10 @@
 """
-打包脚本 - 将系统打包为Windows可执行文件
-使用方法: python build_exe.py
+* 打包脚本 - 将系统打包为Windows可执行文件
+* 使用方法: python build_exe.py
+* 不建议用户使用，仅供开发者后续为程序封包，目前仅展示部分代码，仍然在开发中
+* create by 林文光
+* copyright USTC
+* 2026.03.09
 """
 import subprocess
 import sys
