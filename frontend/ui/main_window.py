@@ -25,15 +25,18 @@ class GradeWorker(QThread):
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
-    def __init__(self, api_client, file_id, questions):
+    def __init__(self, api_client, file_id, questions,
+                 enable_llm_correction=False):
         super().__init__()
         self._api = api_client
         self._file_id = file_id
         self._questions = questions
+        self._enable_llm_correction = enable_llm_correction
 
     def run(self):
         try:
-            result = self._api.grade(self._file_id, self._questions)
+            result = self._api.grade(self._file_id, self._questions,
+                                     enable_llm_correction=self._enable_llm_correction)
             if 'error' in result:
                 self.error.emit(result['error'])
             else:
@@ -230,10 +233,14 @@ class MainWindow(QMainWindow):
             for q in questions
         ]
 
-        self._statusbar.showMessage("正在识别与批改中，请稍候...")
+        enable_correction = self._answer_panel.is_llm_correction_enabled()
+
+        self._statusbar.showMessage("正在识别与批改中，请稍候..."
+                                    + (" (已启用AI纠错)" if enable_correction else ""))
         QApplication.processEvents()
 
-        self._worker = GradeWorker(self._api, self._file_id, q_data)
+        self._worker = GradeWorker(self._api, self._file_id, q_data,
+                                   enable_llm_correction=enable_correction)
         self._worker.finished.connect(self._on_grade_done)
         self._worker.error.connect(self._on_grade_error)
         self._worker.start()
@@ -249,11 +256,18 @@ class MainWindow(QMainWindow):
         self._image_panel.set_ocr_results(ocr_results)
         self._result_panel.display_from_api(results, summary)
 
-        self._statusbar.showMessage(
-            f"批改完成(已保存) - 识别{ocr_count}条文本 - "
-            f"得分: {summary.get('earned_points', 0)}/{summary.get('total_points', 0)} "
-            f"({summary.get('percentage', 0):.1f}%)"
-        )
+        status = f"批改完成(已保存) - 识别{ocr_count}条文本 - " \
+                 f"得分: {summary.get('earned_points', 0)}/{summary.get('total_points', 0)} " \
+                 f"({summary.get('percentage', 0):.1f}%)"
+
+        llm_info = result.get('llm_correction', {})
+        llm_status = llm_info.get('status')
+        if llm_status == 'applied':
+            status += f" | AI纠错: 修正了{llm_info.get('corrected_count', 0)}处"
+        elif llm_status == 'no_api_key':
+            status += " | AI纠错: 未配置API Key"
+
+        self._statusbar.showMessage(status)
 
     def _on_grade_error(self, error_msg):
         self._statusbar.showMessage("批改失败")

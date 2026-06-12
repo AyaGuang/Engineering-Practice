@@ -3,7 +3,8 @@ import json
 from dataclasses import dataclass
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
-                             QComboBox, QHeaderView, QFileDialog, QMessageBox)
+                             QComboBox, QHeaderView, QFileDialog, QMessageBox,
+                             QCheckBox)
 from PyQt5.QtCore import Qt
 
 import config
@@ -81,6 +82,13 @@ class AnswerPanel(QWidget):
 
         for btn in [btn_add, btn_del, btn_load, btn_save]:
             btn_layout.addWidget(btn)
+
+        btn_layout.addStretch()
+
+        self._llm_checkbox = QCheckBox("启用 AI 纠错")
+        self._llm_checkbox.setToolTip("使用 LLM 纠正 OCR 识别中的明显错误\n需在后端配置 OPENAI_API_KEY")
+        btn_layout.addWidget(self._llm_checkbox)
+
         layout.addLayout(btn_layout)
 
         for _ in range(3):
@@ -134,6 +142,10 @@ class AnswerPanel(QWidget):
                 standard_answer=answer, points=points
             ))
         return questions
+
+    def is_llm_correction_enabled(self) -> bool:
+        """是否启用了LLM纠错"""
+        return self._llm_checkbox.isChecked()
 
     def _save_template(self):
         path, _ = QFileDialog.getSaveFileName(self, "保存答案模板", "",

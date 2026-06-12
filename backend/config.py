@@ -22,3 +22,10 @@ PARTIAL_MATCH_THRESHOLD = 90
 
 # 数据库配置
 DB_NAME = 'homework_grader.db'
+
+# LLM纠错配置（OCR结果纠正）
+LLM_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+LLM_MODEL = os.environ.get('LLM_MODEL', 'deepseek-v4-flash')
+LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.deepseek.com')  # 可选，支持兼容API
+LLM_CORRECTION_ENABLED = False  # 默认关闭，由前端请求控制
+LLM_TIMEOUT = 30  # 秒

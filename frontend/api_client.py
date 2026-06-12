@@ -59,14 +59,17 @@ class ApiClient:
 
     # ---------- 批改（核心接口） ----------
 
-    def grade(self, file_id: str, questions: list) -> dict:
+    def grade(self, file_id: str, questions: list,
+              enable_llm_correction: bool = False) -> dict:
         """
         一步完成OCR+批改。
         questions: [{"number": 1, "type": "fill_blank", "answer": "北京", "points": 2}, ...]
+        enable_llm_correction: 是否启用LLM纠错
         """
         payload = {
             "file_id": file_id,
             "questions": questions,
+            "enable_llm_correction": enable_llm_correction,
         }
         resp = requests.post(self._url('/api/grade'), json=payload, timeout=120)
         if resp.status_code != 200:

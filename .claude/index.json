@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-06-12T21:10:52+0800",
+  "project": "homework_ocr_grader",
+  "description": "手写作业OCR识别与自动批改系统",
+  "root_claude_md": "CLAUDE.md",
+  "modules": [
+    {
+      "name": "backend",
+      "path": "backend/",
+      "claude_md": "backend/CLAUDE.md",
+      "language": "Python",
+      "entry_points": ["backend/app.py"],
+      "interfaces": [
+        "GET /api/health",
+        "POST /api/upload",
+        "POST /api/preprocess/<file_id>",
+        "POST /api/ocr/<file_id>",
+        "POST /api/parse",
+        "POST /api/grade",
+        "POST /api/export/<file_id>",
+        "GET /api/history",
+        "GET /api/history/<id>",
+        "DELETE /api/history/<id>",
+        "GET /api/statistics"
+      ],
+      "tests": [
+        "backend/test_grader.py",
+        "backend/test_database.py",
+        "backend/test_parser.py"
+      ],
+      "config_files": ["backend/config.py"],
+      "data_models": [
+        "backend/models/question.py",
+        "backend/models/result.py",
+        "backend/database.py"
+      ],
+      "important_paths": [
+        "backend/core/ocr_engine.py",
+        "backend/core/preprocessor.py",
+        "backend/core/parser.py",
+        "backend/core/grader.py",
+        "backend/core/exporter.py",
+        "backend/database.py"
+      ],
+      "coverage": {
+        "files_total": 14,
+        "files_scanned": 14,
+        "percentage": 100
+      },
+      "gaps": []
+    },
+    {
+      "name": "frontend",
+      "path": "frontend/",
+      "claude_md": "frontend/CLAUDE.md",
+      "language": "Python",
+      "entry_points": ["frontend/main.py"],
+      "interfaces": [],
+      "tests": [],
+      "config_files": ["frontend/config.py"],
+      "data_models": [],
+      "important_paths": [
+        "frontend/api_client.py",
+        "frontend/ui/main_window.py",
+        "frontend/ui/image_panel.py",
+        "frontend/ui/answer_panel.py",
+        "frontend/ui/result_panel.py",
+        "frontend/ui/history_panel.py",
+        "frontend/ui/resources/style.qss"
+      ],
+      "coverage": {
+        "files_total": 9,
+        "files_scanned": 9,
+        "percentage": 100
+      },
+      "gaps": ["frontend模块缺少自动化测试"]
+    }
+  ],
+  "root_files": {
+    "launcher.py": "统一启动器，管理后端子进程 + 启动前端 GUI",
+    "build_exe.py": "PyInstaller 打包脚本",
+    "HomeworkGrader.spec": "PyInstaller 配置文件",
+    "requirements.txt": "Python 依赖清单",
+    "README.md": "项目说明文档",
+    "templates/sample_template.json": "示例答案模板"
+  },
+  "external_assets": {
+    "models/PP-OCRv5_server_det/": "PaddleOCR v5 文字检测模型",
+    "models/PP-OCRv5_server_rec/": "PaddleOCR v5 文字识别模型"
+  },
+  "scan_coverage": {
+    "total_estimated_files": 35,
+    "files_scanned": 35,
+    "percentage": 100,
+    "skipped_paths": {
+      "__pycache__/": "Python 编译缓存",
+      "models/PP-OCRv5_server_det/.cache/": "HuggingFace 下载缓存元数据",
+      "models/PP-OCRv5_server_rec/.cache/": "HuggingFace 下载缓存元数据",
+      "*.pyc": "Python 编译字节码",
+      "*.pdiparams": "PaddlePaddle 模型二进制参数文件",
+      "*.lock": "文件锁",
+      "*.metadata": "HuggingFace 元数据",
+      "backend/homework_grader.db": "SQLite 运行时数据库",
+      "中期材料/": "课程中期文档与图片素材",
+      "assets/": "README图片资源"
+    },
+    "skipped_reasons": {
+      "binary_files": "模型参数、数据库、编译缓存等二进制文件仅记录路径",
+      "documentation_assets": "课程文档和图片素材不纳入代码扫描",
+      "cache_files": "__pycache__、HuggingFace缓存等可重新生成的文件"
+    }
+  },
+  "truncated": false,
+  "gaps": [
+    {
+      "module": "frontend",
+      "type": "missing_tests",
+      "description": "frontend 模块没有自动化测试文件"
+    }
+  ],
+  "next_steps": []
+}

@@ -8,14 +8,25 @@
 import os
 import json
 import uuid
+import logging
+import traceback
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import config
 from core import preprocessor, ocr_engine, parser, grader, exporter
+from core.llm_corrector import LLMCorrector
 from models.question import Question, QuestionType
 import database as db
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s %(name)s - %(message)s',
+    datefmt='%H:%M:%S',
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +37,22 @@ os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 
 # 初始化数据库
 db.init_db()
+
+# LLM纠错实例（延迟初始化）
+_llm_corrector = None
+
+
+def _get_llm_corrector():
+    """获取或创建LLM纠错实例"""
+    global _llm_corrector
+    if _llm_corrector is None and config.LLM_API_KEY:
+        _llm_corrector = LLMCorrector(
+            api_key=config.LLM_API_KEY,
+            model=config.LLM_MODEL,
+            base_url=config.LLM_BASE_URL or None,
+            timeout=config.LLM_TIMEOUT,
+        )
+    return _llm_corrector
 
 
 def allowed_file(filename):
@@ -89,6 +116,7 @@ def preprocess_image(file_id):
         cv2.imwrite(processed_path, processed)
         return jsonify({"message": "预处理完成", "file_id": file_id})
     except Exception as e:
+        logger.error('预处理失败:\n%s', traceback.format_exc())
         return jsonify({"error": f"预处理失败: {str(e)}"}), 500
 
 
@@ -111,6 +139,7 @@ def ocr_recognize(file_id):
         ]
         return jsonify({"ocr_results": ocr_data, "count": len(ocr_data)})
     except Exception as e:
+        logger.error('OCR识别失败:\n%s', traceback.format_exc())
         return jsonify({"error": f"OCR识别失败: {str(e)}"}), 500
 
 
@@ -140,6 +169,7 @@ def grade_homework():
 
     file_id = data.get('file_id')
     questions_data = data.get('questions', [])
+    enable_correction = data.get('enable_llm_correction', False)
 
     if not file_id or not questions_data:
         return jsonify({"error": "缺少file_id或questions参数"}), 400
@@ -164,10 +194,32 @@ def grade_homework():
         ))
 
     try:
-        # 完整流水线：OCR识别 → 解析 → 批改
+        # 完整流水线：OCR识别 → LLM纠错(可选) → 解析 → 批改
+        logger.info('开始批改 file_id=%s, %d道题, AI纠错=%s',
+                     file_id, len(questions), enable_correction)
         ocr_results = ocr_engine.recognize(filepath)
+        logger.info('OCR识别完成, %d条结果', len(ocr_results))
+
+        llm_correction_status = None
+        llm_correction_count = 0
+        if enable_correction:
+            corrector = _get_llm_corrector()
+            if corrector:
+                context = '; '.join(
+                    '第%d题答案:%s' % (q.get('number', 0), q.get('answer', ''))
+                    for q in questions_data
+                )
+                ocr_results, llm_correction_count = corrector.correct(
+                    ocr_results, context=context)
+                llm_correction_status = 'applied'
+                logger.info('LLM纠错完成, 修正%d处', llm_correction_count)
+            else:
+                llm_correction_status = 'no_api_key'
+
         parsed = parser.parse_answers(ocr_results)
         report = grader.grade_all(parsed, questions)
+        logger.info('批改完成, 得分%.1f/%.1f (%.1f%%)',
+                     report.earned_points, report.total_points, report.percentage)
 
         # 构建响应
         result_data = []
@@ -222,9 +274,14 @@ def grade_homework():
             "ocr_results": ocr_data,
             "parsed_answers": {str(k): v for k, v in parsed.items()},
             "grading_id": grading_id,
+            "llm_correction": {
+                "status": llm_correction_status,
+                "corrected_count": llm_correction_count,
+            },
         })
 
     except Exception as e:
+        logger.error('批改失败:\n%s', traceback.format_exc())
         return jsonify({"error": f"批改失败: {str(e)}"}), 500
 
 
@@ -252,6 +309,7 @@ def export_report(file_id):
             content = f.read()
         return jsonify({"content": content, "format": fmt})
     except Exception as e:
+        logger.error('导出失败:\n%s', traceback.format_exc())
         return jsonify({"error": f"导出失败: {str(e)}"}), 500
 
 
