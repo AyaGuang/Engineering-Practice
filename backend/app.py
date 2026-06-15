@@ -46,6 +46,21 @@ os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 # 初始化数据库
 db.init_db()
 
+# 启动时清理过期上传文件（默认7天前），避免磁盘无限堆积
+def _cleanup_expired_uploads(max_age_days=7):
+    import time
+    import glob
+    now = time.time()
+    cutoff = now - max_age_days * 86400
+    for f in glob.glob(os.path.join(config.UPLOAD_FOLDER, '*')):
+        try:
+            if os.path.getmtime(f) < cutoff:
+                os.remove(f)
+        except OSError:
+            pass
+
+_cleanup_expired_uploads()
+
 # LLM纠错实例（延迟初始化）
 _llm_corrector = None
 
@@ -214,7 +229,9 @@ def grade_homework():
             corrector = _get_llm_corrector()
             if corrector:
                 context = '; '.join(
-                    '第%d题答案:%s' % (q.get('number', 0), q.get('answer', ''))
+                    '第%d题(类型:%s)标准答案:%s' % (
+                        q.get('number', 0), q.get('type', 'fill_blank'),
+                        q.get('answer', ''))
                     for q in questions_data
                 )
                 ocr_results, llm_correction_count = corrector.correct(
@@ -264,7 +281,8 @@ def grade_homework():
             session.close()
 
         # 清理上传的图片文件，释放磁盘空间
-        _cleanup_files(file_id)
+        # 注：不再立即清理，否则无法对同一张图重复批改。
+        # 改为应用启动时清理过期文件（见 init_upload_cleanup）
 
         ocr_data = [
             {

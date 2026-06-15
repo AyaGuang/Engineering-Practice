@@ -91,7 +91,9 @@ class ImagePanel(QWidget):
     def set_image(self, image_path: str):
         """加载并显示图片"""
         self._image_path = image_path
-        self._original_img = cv2.imread(image_path)
+        # 用 imdecode 替代 imread，支持中文路径
+        self._original_img = cv2.imdecode(
+            np.fromfile(image_path, dtype=np.uint8), cv2.IMREAD_COLOR)
         if self._original_img is None:
             self._image_label.setText("无法加载图片")
             return

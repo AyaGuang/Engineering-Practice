@@ -11,7 +11,9 @@ import numpy as np
 
 def preprocess(image_path: str) -> np.ndarray:
     """完整预处理流水线，返回处理后的图像"""
-    img = cv2.imread(image_path)
+    # 用 imdecode 替代 imread，支持中文路径
+    img = cv2.imdecode(
+        np.fromfile(image_path, dtype=np.uint8), cv2.IMREAD_COLOR)
     if img is None:
         raise FileNotFoundError(f"无法读取图片: {image_path}")
 
