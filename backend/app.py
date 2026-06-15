@@ -225,23 +225,24 @@ def grade_homework():
 
         llm_correction_status = None
         llm_correction_count = 0
+        llm_matched = {}
         if enable_correction:
             corrector = _get_llm_corrector()
             if corrector:
-                context = '; '.join(
-                    '第%d题(类型:%s)标准答案:%s' % (
-                        q.get('number', 0), q.get('type', 'fill_blank'),
-                        q.get('answer', ''))
-                    for q in questions_data
-                )
-                ocr_results, llm_correction_count = corrector.correct(
-                    ocr_results, context=context)
+                ocr_results, llm_correction_count, llm_matched = corrector.correct(
+                    ocr_results, questions=questions_data)
                 llm_correction_status = 'applied'
-                logger.info('LLM纠错完成, 修正%d处', llm_correction_count)
+                logger.info('LLM纠错完成, 修正%d处, 匹配%d题',
+                            llm_correction_count, len(llm_matched))
             else:
                 llm_correction_status = 'no_api_key'
 
-        parsed = parser.parse_answers(ocr_results)
+        # AI纠错开启且成功匹配时，用LLM的匹配结果；否则降级回正则解析
+        if llm_matched:
+            parsed = {int(k) if str(k).isdigit() else k: v
+                      for k, v in llm_matched.items()}
+        else:
+            parsed = parser.parse_answers(ocr_results)
         report = grader.grade_all(parsed, questions)
         logger.info('批改完成, 得分%.1f/%.1f (%.1f%%)',
                      report.earned_points, report.total_points, report.percentage)
