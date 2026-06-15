@@ -29,7 +29,11 @@ def get_ocr() -> PaddleOCR:
     global _ocr_instance
     if _ocr_instance is None:
         import logging
+        import paddle
         logging.getLogger('ppocr').setLevel(logging.WARNING)
+        # 禁用oneDNN：PaddlePaddle 3.x的PIR图与oneDNN存在兼容性问题，
+        # 会触发"ConvertPirAttribute2RuntimeAttribute not support"异常。
+        paddle.set_flags({'FLAGS_use_mkldnn': False})
         _ocr_instance = PaddleOCR(
             lang=config.OCR_LANG,
             text_detection_model_dir=_DET_MODEL_DIR,
@@ -37,6 +41,7 @@ def get_ocr() -> PaddleOCR:
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
+            enable_mkldnn=False,
         )
     return _ocr_instance
 

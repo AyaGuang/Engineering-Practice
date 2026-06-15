@@ -4,7 +4,8 @@ import os
 # 服务器配置
 HOST = '127.0.0.1'
 PORT = 5000
-DEBUG = True
+# 关闭debug的reloader：运行中文件变动会导致服务重启，中断正在进行的批改请求
+DEBUG = False
 
 # 上传文件配置
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
