@@ -20,11 +20,19 @@ from core.llm_corrector import LLMCorrector
 from models.question import Question, QuestionType
 import database as db
 
-# 配置日志
+# 配置日志：同时输出到控制台和文件
+_log_format = '[%(asctime)s] %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s %(name)s - %(message)s',
+    format=_log_format,
     datefmt='%H:%M:%S',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(
+            os.path.join(os.path.dirname(__file__), 'app.log'),
+            encoding='utf-8',
+        ),
+    ],
 )
 logger = logging.getLogger(__name__)
 

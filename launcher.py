@@ -47,17 +47,20 @@ def start_backend():
     if sys.platform == 'win32':
         creation_flags = subprocess.CREATE_NO_WINDOW
 
+    # 后端日志已写入 backend/app.log，这里不捕获stdout/stderr，
+    # 避免PaddleOCR大量输出塞满管道缓冲区导致死锁。
+    # 若需要诊断后端启动失败，请查看 backend/app.log。
     _backend_process = subprocess.Popen(
         [python_exe, backend_script],
         cwd=BACKEND_DIR,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         creationflags=creation_flags,
     )
 
-    # 等待后端就绪（最多等15秒）
-    for i in range(30):
-        time.sleep(0.5)
+    # 等待后端就绪（最多等60秒，PaddleOCR冷启动较慢）
+    for i in range(60):
+        time.sleep(1)
         try:
             resp = requests.get(HEALTH_URL, timeout=2)
             if resp.status_code == 200:
@@ -68,11 +71,10 @@ def start_backend():
 
         # 检查进程是否已意外退出
         if _backend_process.poll() is not None:
-            stderr = _backend_process.stderr.read().decode('utf-8', errors='replace')
-            print(f"[错误] 后端启动失败:\n{stderr}")
+            print(f"[错误] 后端进程意外退出，请查看 backend/app.log")
             return False
 
-    print("[错误] 后端服务启动超时")
+    print("[错误] 后端服务启动超时（60秒）")
     return False
 
 
