@@ -11,6 +11,7 @@ from ui.image_panel import ImagePanel
 from ui.answer_panel import AnswerPanel
 from ui.result_panel import ResultPanel
 from ui.history_panel import HistoryPanel
+from ui.settings_dialog import SettingsDialog
 from api_client import ApiClient
 
 
@@ -26,17 +27,19 @@ class GradeWorker(QThread):
     error = pyqtSignal(str)
 
     def __init__(self, api_client, file_id, questions,
-                 enable_llm_correction=False):
+                 enable_llm_correction=False, match_mode='by_number'):
         super().__init__()
         self._api = api_client
         self._file_id = file_id
         self._questions = questions
         self._enable_llm_correction = enable_llm_correction
+        self._match_mode = match_mode
 
     def run(self):
         try:
             result = self._api.grade(self._file_id, self._questions,
-                                     enable_llm_correction=self._enable_llm_correction)
+                                     enable_llm_correction=self._enable_llm_correction,
+                                     match_mode=self._match_mode)
             if 'error' in result:
                 self.error.emit(result['error'])
             else:
@@ -143,6 +146,12 @@ class MainWindow(QMainWindow):
         act_history.triggered.connect(lambda: self._tabs.setCurrentIndex(1))
         toolbar.addAction(act_history)
 
+        toolbar.addSeparator()
+
+        act_settings = QAction("设置", self)
+        act_settings.triggered.connect(self._open_settings)
+        toolbar.addAction(act_settings)
+
     def _create_menubar(self):
         menubar = self.menuBar()
 
@@ -234,13 +243,16 @@ class MainWindow(QMainWindow):
         ]
 
         enable_correction = self._answer_panel.is_llm_correction_enabled()
+        match_mode = self._answer_panel.get_match_mode()
 
-        self._statusbar.showMessage("正在识别与批改中，请稍候..."
+        mode_label = "位置匹配" if match_mode == 'by_position' else "题号匹配"
+        self._statusbar.showMessage(f"正在识别与批改中({mode_label})，请稍候..."
                                     + (" (已启用AI纠错)" if enable_correction else ""))
         QApplication.processEvents()
 
         self._worker = GradeWorker(self._api, self._file_id, q_data,
-                                   enable_llm_correction=enable_correction)
+                                   enable_llm_correction=enable_correction,
+                                   match_mode=match_mode)
         self._worker.finished.connect(self._on_grade_done)
         self._worker.error.connect(self._on_grade_error)
         self._worker.start()
@@ -303,6 +315,11 @@ class MainWindow(QMainWindow):
         with open(path, 'w', encoding='utf-8') as f:
             f.write(result['content'])
         self._statusbar.showMessage(f"报告已导出: {path}")
+
+    def _open_settings(self):
+        """打开AI纠错设置对话框"""
+        dialog = SettingsDialog(self._api, self)
+        dialog.exec_()
 
     def _show_about(self):
         QMessageBox.about(self, "关于",

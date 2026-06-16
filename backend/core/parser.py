@@ -6,7 +6,7 @@
 * 2026.02.23
 """
 import re
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from models.question import OcrResult
 
@@ -23,7 +23,7 @@ QUESTION_NUMBER_PATTERNS = [
 def parse_answers(ocr_results: List[OcrResult]) -> Dict[int, str]:
     """
     将OCR识别结果解析为 {题号: 答案文本} 字典。
-    支持多行答案合并。
+    支持多行答案合并；题号撞号时先到先得（保留首次，孤立后续重复区域）。
     """
     if not ocr_results:
         return {}
@@ -39,11 +39,51 @@ def parse_answers(ocr_results: List[OcrResult]) -> Dict[int, str]:
         qnum, answer_text = _try_extract_question(text)
 
         if qnum is not None:
-            current_qnum = qnum
-            parsed[current_qnum] = answer_text
+            if qnum not in parsed:
+                # 首次出现该题号：建立记录
+                current_qnum = qnum
+                parsed[current_qnum] = answer_text
+            else:
+                # 题号撞号：先到先得，保留首次内容。
+                # 孤立后续重复区域，避免嵌套内容污染其他题目。
+                current_qnum = None
         elif current_qnum is not None:
             # 续行，追加到当前题目
             parsed[current_qnum] += text
+
+    return parsed
+
+
+def parse_answers_by_position(ocr_results: List[OcrResult]) -> List[Tuple[int, str]]:
+    """
+    按位置顺序解析OCR结果，保留所有题号（含重复/嵌套）。
+    用于位置匹配模式：识别出的每道题按出现顺序组成列表，
+    与标准答案列表按下标一一对应（多退少补）。
+
+    Returns:
+        [(题号, 答案文本), ...] —— 按OCR出现顺序，题号可能重复
+    """
+    if not ocr_results:
+        return []
+
+    parsed = []
+    current_idx = None  # 当前题在 parsed 中的下标
+
+    for result in ocr_results:
+        text = result.text.strip()
+        if not text:
+            continue
+
+        qnum, answer_text = _try_extract_question(text)
+
+        if qnum is not None:
+            # 遇到题号（含重复）：追加为新条目
+            current_idx = len(parsed)
+            parsed.append((qnum, answer_text))
+        elif current_idx is not None:
+            # 续行，追加到当前题
+            qnum, ans = parsed[current_idx]
+            parsed[current_idx] = (qnum, ans + text)
 
     return parsed
 

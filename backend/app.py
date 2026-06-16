@@ -15,6 +15,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import config
+import settings_store
 from core import preprocessor, ocr_engine, parser, grader, exporter
 from core.llm_corrector import LLMCorrector
 from models.question import Question, QuestionType
@@ -46,6 +47,24 @@ os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 # 初始化数据库
 db.init_db()
 
+# 启动时加载用户配置覆盖默认LLM设置
+def _apply_user_settings():
+    """从用户配置文件加载并覆盖config中的LLM配置"""
+    saved = settings_store.load_settings()
+    if saved.get('api_key'):
+        config.LLM_API_KEY = saved['api_key']
+    if saved.get('base_url'):
+        config.LLM_BASE_URL = saved['base_url']
+    if saved.get('model'):
+        config.LLM_MODEL = saved['model']
+    if saved.get('timeout'):
+        config.LLM_TIMEOUT = int(saved['timeout'])
+    logger.info('LLM配置: model=%s, base_url=%s, has_key=%s',
+                config.LLM_MODEL, config.LLM_BASE_URL or '(default)',
+                bool(config.LLM_API_KEY))
+
+_apply_user_settings()
+
 # 启动时清理过期上传文件（默认7天前），避免磁盘无限堆积
 def _cleanup_expired_uploads(max_age_days=7):
     import time
@@ -66,7 +85,7 @@ _llm_corrector = None
 
 
 def _get_llm_corrector():
-    """获取或创建LLM纠错实例"""
+    """获取或创建LLM纠错实例。配置变更后调用方应先重置。"""
     global _llm_corrector
     if _llm_corrector is None and config.LLM_API_KEY:
         _llm_corrector = LLMCorrector(
@@ -76,6 +95,12 @@ def _get_llm_corrector():
             timeout=config.LLM_TIMEOUT,
         )
     return _llm_corrector
+
+
+def _reset_llm_corrector():
+    """重置LLM实例（配置变更后调用，下次使用时重建）"""
+    global _llm_corrector
+    _llm_corrector = None
 
 
 def allowed_file(filename):
@@ -193,6 +218,7 @@ def grade_homework():
     file_id = data.get('file_id')
     questions_data = data.get('questions', [])
     enable_correction = data.get('enable_llm_correction', False)
+    match_mode = data.get('match_mode', 'by_number')  # by_number | by_position
 
     if not file_id or not questions_data:
         return jsonify({"error": "缺少file_id或questions参数"}), 400
@@ -237,15 +263,22 @@ def grade_homework():
             else:
                 llm_correction_status = 'no_api_key'
 
-        # AI纠错开启且成功匹配时，用LLM的匹配结果；否则降级回正则解析
+        # 匹配优先级：AI匹配 > match_mode(by_position/by_number)
         if llm_matched:
             parsed = {int(k) if str(k).isdigit() else k: v
                       for k, v in llm_matched.items()}
+            report = grader.grade_all(parsed, questions)
+        elif match_mode == 'by_position':
+            parsed_list = parser.parse_answers_by_position(ocr_results)
+            # 转为字典用于响应展示（重复题号后者覆盖仅作展示）
+            parsed = {qnum: ans for qnum, ans in parsed_list}
+            report = grader.grade_by_position(parsed_list, questions)
         else:
             parsed = parser.parse_answers(ocr_results)
-        report = grader.grade_all(parsed, questions)
-        logger.info('批改完成, 得分%.1f/%.1f (%.1f%%)',
-                     report.earned_points, report.total_points, report.percentage)
+            report = grader.grade_all(parsed, questions)
+        logger.info('批改完成(模式:%s), 得分%.1f/%.1f (%.1f%%)',
+                    match_mode, report.earned_points, report.total_points,
+                    report.percentage)
 
         # 构建响应
         result_data = []
@@ -422,6 +455,76 @@ def get_stats():
         return jsonify(stats)
     finally:
         session.close()
+
+
+# ============ 设置API ============
+
+@app.route('/api/settings', methods=['GET'])
+def get_settings():
+    """读取LLM配置（API Key脱敏返回）"""
+    saved = settings_store.load_settings()
+    return jsonify({
+        'api_key': saved.get('api_key', ''),
+        'api_key_set': bool(saved.get('api_key')),
+        'base_url': saved.get('base_url', ''),
+        'model': saved.get('model', 'gpt-4o-mini'),
+        'timeout': saved.get('timeout', 30),
+    })
+
+
+@app.route('/api/settings', methods=['PUT'])
+def update_settings():
+    """更新LLM配置并持久化"""
+    data = request.get_json() or {}
+    settings = {
+        'api_key': data.get('api_key', '').strip(),
+        'base_url': data.get('base_url', '').strip(),
+        'model': data.get('model', '').strip() or 'gpt-4o-mini',
+        'timeout': int(data.get('timeout', 30) or 30),
+    }
+    try:
+        settings_store.save_settings(settings)
+    except OSError as e:
+        return jsonify({"error": f"保存失败: {str(e)}"}), 500
+
+    # 覆盖运行时config并重置纠错实例
+    config.LLM_API_KEY = settings['api_key']
+    config.LLM_BASE_URL = settings['base_url']
+    config.LLM_MODEL = settings['model']
+    config.LLM_TIMEOUT = settings['timeout']
+    _reset_llm_corrector()
+    logger.info('LLM配置已更新: model=%s, base_url=%s, has_key=%s',
+                config.LLM_MODEL, config.LLM_BASE_URL or '(default)',
+                bool(config.LLM_API_KEY))
+    return jsonify({"message": "设置已保存"})
+
+
+@app.route('/api/settings/test', methods=['POST'])
+def test_settings():
+    """测试LLM连接是否正常。用提交的配置临时创建实例。"""
+    data = request.get_json() or {}
+    api_key = data.get('api_key', '').strip()
+    base_url = data.get('base_url', '').strip() or None
+    model = data.get('model', '').strip() or 'gpt-4o-mini'
+
+    if not api_key:
+        return jsonify({"ok": False, "error": "未填写API Key"}), 400
+
+    try:
+        tester = LLMCorrector(
+            api_key=api_key, model=model, base_url=base_url, timeout=15)
+        resp = tester.client.chat.completions.create(
+            model=model,
+            messages=[{'role': 'user', 'content': '请回复"OK"'}],
+            max_tokens=10,
+            temperature=0,
+        )
+        reply = (resp.choices[0].message.content or '').strip()
+        logger.info('LLM测试连接成功: model=%s, reply=%s', model, reply[:50])
+        return jsonify({"ok": True, "reply": reply})
+    except Exception as e:
+        logger.warning('LLM测试连接失败: %s', e)
+        return jsonify({"ok": False, "error": str(e)}), 200
 
 
 # ============ 辅助函数 ============

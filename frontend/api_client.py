@@ -60,16 +60,19 @@ class ApiClient:
     # ---------- 批改（核心接口） ----------
 
     def grade(self, file_id: str, questions: list,
-              enable_llm_correction: bool = False) -> dict:
+              enable_llm_correction: bool = False,
+              match_mode: str = 'by_number') -> dict:
         """
         一步完成OCR+批改。
         questions: [{"number": 1, "type": "fill_blank", "answer": "北京", "points": 2}, ...]
         enable_llm_correction: 是否启用LLM纠错
+        match_mode: 答案匹配模式 by_number(题号匹配) | by_position(位置匹配)
         """
         payload = {
             "file_id": file_id,
             "questions": questions,
             "enable_llm_correction": enable_llm_correction,
+            "match_mode": match_mode,
         }
         resp = requests.post(self._url('/api/grade'), json=payload, timeout=120)
         if resp.status_code != 200:
@@ -117,6 +120,35 @@ class ApiClient:
         """获取统计数据"""
         try:
             resp = requests.get(self._url('/api/statistics'), timeout=10)
+            return resp.json()
+        except Exception as e:
+            return {"error": str(e)}
+
+    # ---------- 设置（LLM配置） ----------
+
+    def get_settings(self) -> dict:
+        """读取LLM配置"""
+        try:
+            resp = requests.get(self._url('/api/settings'), timeout=10)
+            return resp.json()
+        except Exception as e:
+            return {"error": str(e)}
+
+    def update_settings(self, settings: dict) -> dict:
+        """更新LLM配置"""
+        try:
+            resp = requests.put(self._url('/api/settings'), json=settings, timeout=10)
+            if resp.status_code != 200:
+                return resp.json()
+            return resp.json()
+        except Exception as e:
+            return {"error": str(e)}
+
+    def test_settings(self, settings: dict) -> dict:
+        """测试LLM连接"""
+        try:
+            resp = requests.post(self._url('/api/settings/test'),
+                                 json=settings, timeout=20)
             return resp.json()
         except Exception as e:
             return {"error": str(e)}
