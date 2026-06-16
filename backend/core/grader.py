@@ -42,6 +42,30 @@ def grade_all(parsed_answers: Dict[int, str], questions: List[Question]) -> Grad
     return GradingReport(results=results)
 
 
+def grade_by_position(parsed_list: List[Tuple[int, str]],
+                      questions: List[Question]) -> GradingReport:
+    """
+    位置匹配批改：标准答案列表与OCR解析列表按下标一一对应。
+    多退少补 —— OCR多余的尾部忽略，不足的题记为空(0分)。
+    """
+    results = []
+    for i, q in enumerate(questions):
+        if i < len(parsed_list):
+            _, recognized = parsed_list[i]
+        else:
+            recognized = ''
+        is_correct, match_score = _grade_single(q, recognized)
+        earned = q.points * match_score if is_correct else 0.0
+        results.append(QuestionResult(
+            question=q,
+            recognized_text=recognized,
+            is_correct=is_correct,
+            match_score=match_score,
+            earned_points=round(earned, 2),
+        ))
+    return GradingReport(results=results)
+
+
 def _grade_single(question: Question, recognized: str) -> Tuple[bool, float]:
     """根据题型分发批改"""
     if question.q_type == QuestionType.FILL_BLANK:
@@ -124,18 +148,40 @@ def grade_multiple_choice(recognized: str, standard: str) -> Tuple[bool, float]:
 
 # ========== 计算题 ==========
 
+def _convert_chinese_digit(text: str) -> str:
+    """转换单个中文数字为阿拉伯数字"""
+    digit_map = {
+        '零': '0', '〇': '0',
+        '一': '1', '壹': '1',
+        '二': '2', '贰': '2',
+        '三': '3', '叁': '3',
+        '四': '4', '肆': '4',
+        '五': '5', '伍': '5',
+        '六': '6', '陆': '6',
+        '七': '7', '柒': '7',
+        '八': '8', '捌': '8',
+        '九': '9', '玖': '9',
+        '十': '10',
+    }
+    for cn, ar in digit_map.items():
+        text = text.replace(cn, ar)
+    return text
+
+
 def _normalize_math(text: str) -> str:
     """归一化数学符号"""
     replacements = {
         '×': '*', '✕': '*', 'Ｘ': '*', 'Ｘ': '*',
         '÷': '/', '➗': '/',
-        '＝': '=', '＋': '+', '－': '-',
+        '＝': '=', '等于': '=',
+        '＋': '+', '－': '-',
         '（': '(', '）': ')',
         '０': '0', '１': '1', '２': '2', '３': '3', '４': '4',
         '５': '5', '６': '6', '７': '7', '８': '8', '９': '9',
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
+    text = _convert_chinese_digit(text)
     return text.strip().replace(' ', '')
 
 
