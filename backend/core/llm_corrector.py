@@ -1,7 +1,7 @@
 """
 * LLMCorrector class
 * LLM OCR纠错引擎 - 调用OpenAI API纠正手写作业OCR识别错误
-* create by 希芙
+* create by 林文光
 * copyright USTC
 * 2026.06.12
 """
