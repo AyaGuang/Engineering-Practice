@@ -7,7 +7,8 @@
 """
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLineEdit,
                              QSpinBox, QPushButton, QHBoxLayout, QLabel,
-                             QMessageBox, QApplication)
+                             QMessageBox, QApplication, QCheckBox,
+                             QComboBox, QGroupBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 
@@ -32,7 +33,7 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self._api = api_client
         self._test_worker = None
-        self.setWindowTitle("AI 纠错设置")
+        self.setWindowTitle("批改设置")
         self.setMinimumWidth(420)
         self._init_ui()
         self._load_settings()
@@ -40,12 +41,14 @@ class SettingsDialog(QDialog):
     def _init_ui(self):
         layout = QVBoxLayout(self)
 
-        hint = QLabel("配置 LLM API 以启用 AI 纠错功能。\n"
+        hint = QLabel("配置 LLM API 与批改行为选项。\n"
                       "设置会保存到用户目录 ~/.homework_grader/settings.json")
         hint.setStyleSheet("color: #666; font-size: 12px;")
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
+        # ===== LLM 配置分组 =====
+        llm_group = QGroupBox("LLM 纠错配置")
         form = QFormLayout()
 
         self._api_key_edit = QLineEdit()
@@ -66,7 +69,39 @@ class SettingsDialog(QDialog):
         self._timeout_spin.setSuffix(" 秒")
         form.addRow("超时:", self._timeout_spin)
 
-        layout.addLayout(form)
+        llm_group.setLayout(form)
+        layout.addWidget(llm_group)
+
+        # ===== 批改选项分组 =====
+        grade_group = QGroupBox("批改选项")
+        grade_layout = QVBoxLayout()
+
+        self._llm_checkbox = QCheckBox("启用 AI 纠错（需配置上方 API Key）")
+        self._llm_checkbox.setToolTip("调用 LLM 纠正 OCR 识别错误，并按语义匹配答案\n需先填写 API Key")
+        grade_layout.addWidget(self._llm_checkbox)
+
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel("答案匹配模式:"))
+        self._match_mode_combo = QComboBox()
+        self._match_mode_combo.addItem("题号匹配", 'by_number')
+        self._match_mode_combo.addItem("位置匹配", 'by_position')
+        self._match_mode_combo.setToolTip(
+            "题号匹配：按题号对应（适合无撞号作业）\n"
+            "位置匹配：识别答案与标准答案从上到下一一对应\n"
+            "         （适合嵌套题号/①②③结构）")
+        mode_row.addWidget(self._match_mode_combo)
+        mode_row.addStretch()
+        grade_layout.addLayout(mode_row)
+
+        self._enhance_checkbox = QCheckBox("选择题增强（跳过选项行，适用于答案写在题干括号的试卷）")
+        self._enhance_checkbox.setToolTip(
+            "开启后解析时跳过 A./B./C./D. 选项行，\n"
+            "避免选项字母污染答案提取。\n"
+            "适用于答案写在题干括号里的试卷格式。")
+        grade_layout.addWidget(self._enhance_checkbox)
+
+        grade_group.setLayout(grade_layout)
+        layout.addWidget(grade_group)
 
         # 按钮区
         btn_layout = QHBoxLayout()
@@ -103,6 +138,13 @@ class SettingsDialog(QDialog):
         self._base_url_edit.setText(result.get('base_url', ''))
         self._model_edit.setText(result.get('model', ''))
         self._timeout_spin.setValue(int(result.get('timeout', 30)))
+        # 批改选项
+        self._llm_checkbox.setChecked(bool(result.get('enable_llm_correction', False)))
+        match_mode = result.get('match_mode', 'by_number')
+        idx = self._match_mode_combo.findData(match_mode)
+        if idx >= 0:
+            self._match_mode_combo.setCurrentIndex(idx)
+        self._enhance_checkbox.setChecked(bool(result.get('enhance_choice', False)))
 
     def _collect_settings(self):
         """收集表单数据。api_key为空时不覆盖（保留原值）。"""
@@ -114,6 +156,9 @@ class SettingsDialog(QDialog):
             'base_url': self._base_url_edit.text().strip(),
             'model': self._model_edit.text().strip(),
             'timeout': self._timeout_spin.value(),
+            'enable_llm_correction': self._llm_checkbox.isChecked(),
+            'match_mode': self._match_mode_combo.currentData(),
+            'enhance_choice': self._enhance_checkbox.isChecked(),
         }
 
     def _on_test(self):

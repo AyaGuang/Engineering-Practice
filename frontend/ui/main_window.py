@@ -26,20 +26,15 @@ class GradeWorker(QThread):
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
-    def __init__(self, api_client, file_id, questions,
-                 enable_llm_correction=False, match_mode='by_number'):
+    def __init__(self, api_client, file_id, questions):
         super().__init__()
         self._api = api_client
         self._file_id = file_id
         self._questions = questions
-        self._enable_llm_correction = enable_llm_correction
-        self._match_mode = match_mode
 
     def run(self):
         try:
-            result = self._api.grade(self._file_id, self._questions,
-                                     enable_llm_correction=self._enable_llm_correction,
-                                     match_mode=self._match_mode)
+            result = self._api.grade(self._file_id, self._questions)
             if 'error' in result:
                 self.error.emit(result['error'])
             else:
@@ -242,17 +237,10 @@ class MainWindow(QMainWindow):
             for q in questions
         ]
 
-        enable_correction = self._answer_panel.is_llm_correction_enabled()
-        match_mode = self._answer_panel.get_match_mode()
-
-        mode_label = "位置匹配" if match_mode == 'by_position' else "题号匹配"
-        self._statusbar.showMessage(f"正在识别与批改中({mode_label})，请稍候..."
-                                    + (" (已启用AI纠错)" if enable_correction else ""))
+        self._statusbar.showMessage("正在识别与批改中，请稍候...")
         QApplication.processEvents()
 
-        self._worker = GradeWorker(self._api, self._file_id, q_data,
-                                   enable_llm_correction=enable_correction,
-                                   match_mode=match_mode)
+        self._worker = GradeWorker(self._api, self._file_id, q_data)
         self._worker.finished.connect(self._on_grade_done)
         self._worker.error.connect(self._on_grade_error)
         self._worker.start()

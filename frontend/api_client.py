@@ -59,20 +59,15 @@ class ApiClient:
 
     # ---------- 批改（核心接口） ----------
 
-    def grade(self, file_id: str, questions: list,
-              enable_llm_correction: bool = False,
-              match_mode: str = 'by_number') -> dict:
+    def grade(self, file_id: str, questions: list) -> dict:
         """
         一步完成OCR+批改。
         questions: [{"number": 1, "type": "fill_blank", "answer": "北京", "points": 2}, ...]
-        enable_llm_correction: 是否启用LLM纠错
-        match_mode: 答案匹配模式 by_number(题号匹配) | by_position(位置匹配)
+        批改选项（AI纠错/匹配模式/选择题增强）由后端从设置读取。
         """
         payload = {
             "file_id": file_id,
             "questions": questions,
-            "enable_llm_correction": enable_llm_correction,
-            "match_mode": match_mode,
         }
         resp = requests.post(self._url('/api/grade'), json=payload, timeout=120)
         if resp.status_code != 200:

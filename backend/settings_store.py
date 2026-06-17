@@ -17,10 +17,15 @@ _SETTINGS_FILE = os.path.join(_SETTINGS_DIR, 'settings.json')
 
 # 默认配置（缺省值）
 _DEFAULTS = {
+    # LLM 纠错配置
     'api_key': '',
     'base_url': '',
     'model': 'gpt-4o-mini',
     'timeout': 30,
+    # 批改行为选项
+    'enable_llm_correction': False,   # 是否启用AI纠错
+    'match_mode': 'by_number',        # 答案匹配模式: by_number | by_position
+    'enhance_choice': False,          # 选择题增强：跳过选项行避免污染答案
 }
 
 

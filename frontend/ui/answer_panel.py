@@ -3,8 +3,7 @@ import json
 from dataclasses import dataclass
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
-                             QComboBox, QHeaderView, QFileDialog, QMessageBox,
-                             QCheckBox)
+                             QComboBox, QHeaderView, QFileDialog, QMessageBox)
 from PyQt5.QtCore import Qt
 
 import config
@@ -85,20 +84,6 @@ class AnswerPanel(QWidget):
 
         btn_layout.addStretch()
 
-        self._match_mode_combo = QComboBox()
-        self._match_mode_combo.addItem("题号匹配", 'by_number')
-        self._match_mode_combo.addItem("位置匹配", 'by_position')
-        self._match_mode_combo.setToolTip(
-            "题号匹配：按题号对应（适合无撞号作业）\n"
-            "位置匹配：识别答案与标准答案从上到下一一对应\n"
-            "         （适合嵌套题号/①②③结构，按表格顺序填答案）")
-        btn_layout.addWidget(QLabel("匹配模式:"))
-        btn_layout.addWidget(self._match_mode_combo)
-
-        self._llm_checkbox = QCheckBox("启用 AI 纠错")
-        self._llm_checkbox.setToolTip("使用 LLM 纠正 OCR 识别中的明显错误\n需在后端配置 OPENAI_API_KEY")
-        btn_layout.addWidget(self._llm_checkbox)
-
         layout.addLayout(btn_layout)
 
         for _ in range(3):
@@ -152,14 +137,6 @@ class AnswerPanel(QWidget):
                 standard_answer=answer, points=points
             ))
         return questions
-
-    def is_llm_correction_enabled(self) -> bool:
-        """是否启用了LLM纠错"""
-        return self._llm_checkbox.isChecked()
-
-    def get_match_mode(self) -> str:
-        """获取答案匹配模式: by_number(题号匹配) | by_position(位置匹配)"""
-        return self._match_mode_combo.currentData()
 
     def _save_template(self):
         path, _ = QFileDialog.getSaveFileName(self, "保存答案模板", "",

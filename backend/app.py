@@ -217,8 +217,14 @@ def grade_homework():
 
     file_id = data.get('file_id')
     questions_data = data.get('questions', [])
-    enable_correction = data.get('enable_llm_correction', False)
-    match_mode = data.get('match_mode', 'by_number')  # by_number | by_position
+
+    # 批改选项：优先用请求参数，缺省回退到持久化设置
+    _cfg = settings_store.load_settings()
+    enable_correction = data.get('enable_llm_correction',
+                                 _cfg.get('enable_llm_correction', False))
+    match_mode = data.get('match_mode', _cfg.get('match_mode', 'by_number'))
+    enhance_choice = data.get('enhance_choice',
+                              _cfg.get('enhance_choice', False))
 
     if not file_id or not questions_data:
         return jsonify({"error": "缺少file_id或questions参数"}), 400
@@ -269,16 +275,17 @@ def grade_homework():
                       for k, v in llm_matched.items()}
             report = grader.grade_all(parsed, questions)
         elif match_mode == 'by_position':
-            parsed_list = parser.parse_answers_by_position(ocr_results)
+            parsed_list = parser.parse_answers_by_position(
+                ocr_results, skip_options=enhance_choice)
             # 转为字典用于响应展示（重复题号后者覆盖仅作展示）
             parsed = {qnum: ans for qnum, ans in parsed_list}
             report = grader.grade_by_position(parsed_list, questions)
         else:
-            parsed = parser.parse_answers(ocr_results)
+            parsed = parser.parse_answers(ocr_results, skip_options=enhance_choice)
             report = grader.grade_all(parsed, questions)
-        logger.info('批改完成(模式:%s), 得分%.1f/%.1f (%.1f%%)',
-                    match_mode, report.earned_points, report.total_points,
-                    report.percentage)
+        logger.info('批改完成(模式:%s, 增强:%s), 得分%.1f/%.1f (%.1f%%)',
+                    match_mode, enhance_choice, report.earned_points,
+                    report.total_points, report.percentage)
 
         # 构建响应
         result_data = []
@@ -461,7 +468,7 @@ def get_stats():
 
 @app.route('/api/settings', methods=['GET'])
 def get_settings():
-    """读取LLM配置（API Key脱敏返回）"""
+    """读取配置（API Key脱敏返回）"""
     saved = settings_store.load_settings()
     return jsonify({
         'api_key': saved.get('api_key', ''),
@@ -469,18 +476,42 @@ def get_settings():
         'base_url': saved.get('base_url', ''),
         'model': saved.get('model', 'gpt-4o-mini'),
         'timeout': saved.get('timeout', 30),
+        'enable_llm_correction': saved.get('enable_llm_correction', False),
+        'match_mode': saved.get('match_mode', 'by_number'),
+        'enhance_choice': saved.get('enhance_choice', False),
     })
 
 
 @app.route('/api/settings', methods=['PUT'])
 def update_settings():
-    """更新LLM配置并持久化"""
+    """更新配置并持久化（LLM配置 + 批改选项）"""
     data = request.get_json() or {}
+    # 以已有配置为base合并，避免None覆盖合法值
+    current = settings_store.load_settings()
+
+    # api_key=None 表示不修改，保留原值
+    api_key = data.get('api_key')
+    if api_key is None:
+        api_key = current.get('api_key', '')
+    elif isinstance(api_key, str):
+        api_key = api_key.strip()
+    else:
+        api_key = ''
+
+    def _str(key, default=''):
+        v = data.get(key)
+        return v.strip() if isinstance(v, str) else default
+
     settings = {
-        'api_key': data.get('api_key', '').strip(),
-        'base_url': data.get('base_url', '').strip(),
-        'model': data.get('model', '').strip() or 'gpt-4o-mini',
-        'timeout': int(data.get('timeout', 30) or 30),
+        'api_key': api_key,
+        'base_url': _str('base_url', current.get('base_url', '')),
+        'model': _str('model') or current.get('model', 'gpt-4o-mini'),
+        'timeout': int(data.get('timeout') or current.get('timeout', 30)),
+        'enable_llm_correction': bool(data.get('enable_llm_correction',
+                                               current.get('enable_llm_correction', False))),
+        'match_mode': data.get('match_mode') or current.get('match_mode', 'by_number'),
+        'enhance_choice': bool(data.get('enhance_choice',
+                                        current.get('enhance_choice', False))),
     }
     try:
         settings_store.save_settings(settings)
@@ -493,9 +524,12 @@ def update_settings():
     config.LLM_MODEL = settings['model']
     config.LLM_TIMEOUT = settings['timeout']
     _reset_llm_corrector()
-    logger.info('LLM配置已更新: model=%s, base_url=%s, has_key=%s',
+    logger.info('配置已更新: model=%s, base_url=%s, has_key=%s, '
+                'ai_correction=%s, match_mode=%s, enhance_choice=%s',
                 config.LLM_MODEL, config.LLM_BASE_URL or '(default)',
-                bool(config.LLM_API_KEY))
+                bool(config.LLM_API_KEY),
+                settings['enable_llm_correction'],
+                settings['match_mode'], settings['enhance_choice'])
     return jsonify({"message": "设置已保存"})
 
 

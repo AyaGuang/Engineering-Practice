@@ -19,11 +19,34 @@ QUESTION_NUMBER_PATTERNS = [
     re.compile(r'^(\d+)\s*[．]\s*(.*)'),                        # 1．(全角句点)
 ]
 
+# 选项前缀：字母(A-D) + 分隔符(. 、 ) ）)
+_OPTION_PREFIX = re.compile(r'[A-Da-d]\s*[.、)）]')
 
-def parse_answers(ocr_results: List[OcrResult]) -> Dict[int, str]:
+
+def _is_options_line(text: str) -> bool:
+    """
+    检测一行是否为选择题选项行。
+    形态1：以"A." "B、" "C)" 这类开头（单选项独占一行）
+    形态2：一行内出现2个以上选项前缀（多选项挤在一行，如"A.9B.6C.5D.4"）
+    """
+    text = text.strip()
+    if not text:
+        return False
+    if re.match(r'^[A-Da-d]\s*[.、)）]', text):
+        return True
+    if len(_OPTION_PREFIX.findall(text)) >= 2:
+        return True
+    return False
+
+
+def parse_answers(ocr_results: List[OcrResult],
+                  skip_options: bool = False) -> Dict[int, str]:
     """
     将OCR识别结果解析为 {题号: 答案文本} 字典。
     支持多行答案合并；题号撞号时先到先得（保留首次，孤立后续重复区域）。
+
+    Args:
+        skip_options: 开启选择题增强时，跳过选项行（A.B.C.D.）避免污染答案
     """
     if not ocr_results:
         return {}
@@ -48,17 +71,24 @@ def parse_answers(ocr_results: List[OcrResult]) -> Dict[int, str]:
                 # 孤立后续重复区域，避免嵌套内容污染其他题目。
                 current_qnum = None
         elif current_qnum is not None:
+            # 选择题增强：选项行不污染答案（答案已在题干括号里）
+            if skip_options and _is_options_line(text):
+                continue
             # 续行，追加到当前题目
             parsed[current_qnum] += text
 
     return parsed
 
 
-def parse_answers_by_position(ocr_results: List[OcrResult]) -> List[Tuple[int, str]]:
+def parse_answers_by_position(ocr_results: List[OcrResult],
+                              skip_options: bool = False) -> List[Tuple[int, str]]:
     """
     按位置顺序解析OCR结果，保留所有题号（含重复/嵌套）。
     用于位置匹配模式：识别出的每道题按出现顺序组成列表，
     与标准答案列表按下标一一对应（多退少补）。
+
+    Args:
+        skip_options: 开启选择题增强时，跳过选项行避免污染答案
 
     Returns:
         [(题号, 答案文本), ...] —— 按OCR出现顺序，题号可能重复
@@ -81,6 +111,9 @@ def parse_answers_by_position(ocr_results: List[OcrResult]) -> List[Tuple[int, s
             current_idx = len(parsed)
             parsed.append((qnum, answer_text))
         elif current_idx is not None:
+            # 选择题增强：选项行不污染答案
+            if skip_options and _is_options_line(text):
+                continue
             # 续行，追加到当前题
             qnum, ans = parsed[current_idx]
             parsed[current_idx] = (qnum, ans + text)
