@@ -7,7 +7,7 @@
 """
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QFormLayout, QLineEdit,
                              QSpinBox, QPushButton, QHBoxLayout, QLabel,
-                             QMessageBox)
+                             QMessageBox, QApplication)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 
@@ -128,8 +128,7 @@ class SettingsDialog(QDialog):
         self._test_btn.setEnabled(False)
         self._status_label.setText("测试中...")
         self._status_label.setStyleSheet("color: #666; font-size: 12px;")
-        QApplication_ref = __import__('PyQt5.QtWidgets', fromlist=['QApplication'])
-        QApplication_ref.QApplication.processEvents()
+        QApplication.processEvents()
 
         self._test_worker = _TestWorker(self._api, settings)
         self._test_worker.finished_signal.connect(self._on_test_done)

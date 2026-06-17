@@ -49,6 +49,8 @@ pip install -r requirements.txt
 ```
 
 > 项目已内置 PP-OCRv6 模型（`models/PP-OCRv6_medium_*`，约 134MB），开箱即用无需联网下载。
+>
+> **关于 clone**：模型文件通过 Git LFS 管理。clone 后若已安装 [Git LFS](https://git-lfs.com/)，模型会随仓库一起下载（推荐）；若未安装 LFS，首次启动时系统会自动检测并从官方源下载模型，不影响使用。
 
 ### 启动系统
 

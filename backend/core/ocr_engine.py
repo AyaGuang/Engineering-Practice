@@ -24,8 +24,21 @@ _REC_MODEL_DIR = os.path.join(_MODELS_DIR, 'PP-OCRv6_medium_rec')
 _ocr_instance = None
 
 
+def _is_local_model_ready(model_dir: str) -> bool:
+    """
+    检测本地模型是否就绪：目录存在且inference.pdiparams是真实模型文件。
+    用于规避Git LFS指针文件场景——未安装git-lfs的clone只会得到约130字节的指针文件，
+    此时需降级到自动下载分支，避免PaddleOCR加载指针文件失败。
+    """
+    params_file = os.path.join(model_dir, 'inference.pdiparams')
+    if not os.path.isfile(params_file):
+        return False
+    # LFS指针文件约130字节；真实模型至少数MB，以1MB作为判定阈值
+    return os.path.getsize(params_file) > 1024 * 1024
+
+
 def _build_ocr_kwargs() -> dict:
-    """构造PaddleOCR参数。本地模型存在则指定路径，否则交给PaddleOCR自动下载。"""
+    """构造PaddleOCR参数。本地模型就绪则指定路径，否则交给PaddleOCR自动下载。"""
     kwargs = {
         'lang': config.OCR_LANG,
         'use_doc_orientation_classify': False,
@@ -33,14 +46,14 @@ def _build_ocr_kwargs() -> dict:
         'use_textline_orientation': False,
         'enable_mkldnn': False,
     }
-    det_available = os.path.isdir(_DET_MODEL_DIR)
-    rec_available = os.path.isdir(_REC_MODEL_DIR)
-    if det_available and rec_available:
-        # 优先使用本地模型（离线/已下载场景）
+    det_ready = _is_local_model_ready(_DET_MODEL_DIR)
+    rec_ready = _is_local_model_ready(_REC_MODEL_DIR)
+    if det_ready and rec_ready:
+        # 优先使用本地模型（LFS clone或已下载场景）
         kwargs['text_detection_model_dir'] = _DET_MODEL_DIR
         kwargs['text_recognition_model_dir'] = _REC_MODEL_DIR
     else:
-        # 本地缺失时由PaddleOCR按默认行为自动拉取PP-OCRv6
+        # 本地缺失（无模型目录或仅LFS指针）时由PaddleOCR自动拉取PP-OCRv6
         # 注意：v6档位为 tiny/small/medium（非v4/v5的mobile/server）
         kwargs['text_detection_model_name'] = 'PP-OCRv6_medium_det'
         kwargs['text_recognition_model_name'] = 'PP-OCRv6_medium_rec'
