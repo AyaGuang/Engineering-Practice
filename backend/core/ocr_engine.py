@@ -1,6 +1,6 @@
 """
-* QuestionResultRecord class
-* PaddleOCR封装模块
+* OcrEngine class
+* PaddleOCR封装模块（PP-OCRv6）
 * create by 廖帅
 * copyright USTC
 * 2026.02.23
@@ -17,11 +17,34 @@ from models.question import OcrResult
 # 项目内置模型目录
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _MODELS_DIR = os.path.join(_PROJECT_ROOT, 'models')
-_DET_MODEL_DIR = os.path.join(_MODELS_DIR, 'PP-OCRv5_server_det')
-_REC_MODEL_DIR = os.path.join(_MODELS_DIR, 'PP-OCRv5_server_rec')
+_DET_MODEL_DIR = os.path.join(_MODELS_DIR, 'PP-OCRv6_medium_det')
+_REC_MODEL_DIR = os.path.join(_MODELS_DIR, 'PP-OCRv6_medium_rec')
 
 # 全局OCR实例（延迟初始化）
 _ocr_instance = None
+
+
+def _build_ocr_kwargs() -> dict:
+    """构造PaddleOCR参数。本地模型存在则指定路径，否则交给PaddleOCR自动下载。"""
+    kwargs = {
+        'lang': config.OCR_LANG,
+        'use_doc_orientation_classify': False,
+        'use_doc_unwarping': False,
+        'use_textline_orientation': False,
+        'enable_mkldnn': False,
+    }
+    det_available = os.path.isdir(_DET_MODEL_DIR)
+    rec_available = os.path.isdir(_REC_MODEL_DIR)
+    if det_available and rec_available:
+        # 优先使用本地模型（离线/已下载场景）
+        kwargs['text_detection_model_dir'] = _DET_MODEL_DIR
+        kwargs['text_recognition_model_dir'] = _REC_MODEL_DIR
+    else:
+        # 本地缺失时由PaddleOCR按默认行为自动拉取PP-OCRv6
+        # 注意：v6档位为 tiny/small/medium（非v4/v5的mobile/server）
+        kwargs['text_detection_model_name'] = 'PP-OCRv6_medium_det'
+        kwargs['text_recognition_model_name'] = 'PP-OCRv6_medium_rec'
+    return kwargs
 
 
 def get_ocr() -> PaddleOCR:
@@ -34,15 +57,7 @@ def get_ocr() -> PaddleOCR:
         # 禁用oneDNN：PaddlePaddle 3.x的PIR图与oneDNN存在兼容性问题，
         # 会触发"ConvertPirAttribute2RuntimeAttribute not support"异常。
         paddle.set_flags({'FLAGS_use_mkldnn': False})
-        _ocr_instance = PaddleOCR(
-            lang=config.OCR_LANG,
-            text_detection_model_dir=_DET_MODEL_DIR,
-            text_recognition_model_dir=_REC_MODEL_DIR,
-            use_doc_orientation_classify=False,
-            use_doc_unwarping=False,
-            use_textline_orientation=False,
-            enable_mkldnn=False,
-        )
+        _ocr_instance = PaddleOCR(**_build_ocr_kwargs())
     return _ocr_instance
 
 

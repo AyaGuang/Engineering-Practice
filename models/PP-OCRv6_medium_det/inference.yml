@@ -1,5 +1,5 @@
 Global:
-  model_name: PP-OCRv5_server_det
+  model_name: PP-OCRv6_medium_det
 Hpi:
   backend_configs:
     paddle_infer:
@@ -19,14 +19,19 @@ Hpi:
           - 4000
     tensorrt:
       dynamic_shapes: *id001
+PostProcess:
+  box_thresh: 0.45
+  max_candidates: 3000
+  name: DBPostProcess
+  thresh: 0.2
+  unclip_ratio: 1.4
 PreProcess:
   transform_ops:
   - DecodeImage:
       channel_first: false
       img_mode: BGR
   - DetLabelEncode: null
-  - DetResizeForTest:
-      resize_long: 960
+  - DetResizeForTest: null
   - NormalizeImage:
       mean:
       - 0.485
@@ -45,9 +50,3 @@ PreProcess:
       - shape
       - polys
       - ignore_tags
-PostProcess:
-  name: DBPostProcess
-  thresh: 0.3
-  box_thresh: 0.6
-  max_candidates: 1000
-  unclip_ratio: 1.5
