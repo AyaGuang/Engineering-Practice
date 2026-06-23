@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QHeaderView, QSplitter, QMessageBox,
                              QComboBox, QApplication)
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 from ui.result_panel import ResultPanel
 
@@ -103,7 +103,7 @@ class ReviewPanel(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self._refresh()
+        QTimer.singleShot(0, self._refresh)
 
     # ---------- 数据 ----------
 

@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
                              QHeaderView, QMessageBox, QDialog)
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 
 class MyGradesPanel(QWidget):
@@ -74,7 +74,7 @@ class MyGradesPanel(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self._refresh()
+        QTimer.singleShot(0, self._refresh)
 
     # ---------- 加载 ----------
 

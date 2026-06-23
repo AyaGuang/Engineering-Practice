@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
                              QSplitter, QLineEdit, QMessageBox, QHeaderView,
                              QAbstractItemView)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 from ui.answer_panel import AnswerPanel
 
@@ -23,7 +23,8 @@ class AssignmentPanel(QWidget):
         self._api = api_client
         self._editing_id = None  # 当前编辑的作业 id，None=新建
         self._init_ui()
-        self.refresh_list()
+        # 延迟到事件循环再加载，避免在构造期间同步请求后端卡住 UI 启动
+        QTimer.singleShot(0, self.refresh_list)
 
     def _init_ui(self):
         layout = QVBoxLayout(self)

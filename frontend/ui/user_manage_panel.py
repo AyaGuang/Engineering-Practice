@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
                              QHeaderView, QLineEdit, QComboBox, QMessageBox,
                              QGroupBox, QFormLayout, QAbstractItemView)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
 
 class UserManagePanel(QWidget):
@@ -19,7 +19,6 @@ class UserManagePanel(QWidget):
         super().__init__(parent)
         self._api = api_client
         self._init_ui()
-        self._refresh()
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -102,7 +101,7 @@ class UserManagePanel(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self._refresh()
+        QTimer.singleShot(0, self._refresh)
 
     def _refresh(self):
         role = self._filter_role.currentData()  # None = 全部

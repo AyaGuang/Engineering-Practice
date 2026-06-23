@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QComboBox, QCheckBox, QSplitter,
                              QFileDialog, QMessageBox, QApplication,
                              QStatusBar)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 
 import config
 from ui.image_panel import ImagePanel
@@ -106,7 +106,9 @@ class SubmissionPanel(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self._load_assignments()
+        # 延迟到下一轮事件循环再加载，避免在 show() 期间同步发 HTTP 请求
+        # 卡住主线程、导致窗口画出框架后内容区空白。
+        QTimer.singleShot(0, self._load_assignments)
 
     # ---------- 数据加载 ----------
 

@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QMessageBox, QDialog, QTextBrowser, QDoubleSpinBox,
                              QGroupBox, QFormLayout)
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt, QDate, pyqtSignal
+from PyQt5.QtCore import Qt, QDate, pyqtSignal, QTimer
 
 
 """
@@ -137,7 +137,7 @@ class HistoryPanel(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self._refresh()
+        QTimer.singleShot(0, self._refresh)
 
     def _do_search(self):
         self._current_page = 1

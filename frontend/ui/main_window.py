@@ -4,7 +4,7 @@ import os
 from PyQt5.QtWidgets import (QMainWindow, QSplitter, QWidget, QVBoxLayout,
                              QFileDialog, QMessageBox, QStatusBar, QToolBar,
                              QAction, QApplication, QTabWidget)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 
 import config
 from ui.image_panel import ImagePanel
@@ -65,7 +65,8 @@ class MainWindow(QMainWindow):
         self._grade_result = None
         self._worker = None
         self._init_ui()
-        self._check_backend()
+        # 后端连通性检查延后到事件循环，避免在 show() 前同步请求卡住首帧绘制
+        QTimer.singleShot(0, self._check_backend)
 
     def _init_ui(self):
         self.setWindowTitle("手写作业OCR识别与批改系统")

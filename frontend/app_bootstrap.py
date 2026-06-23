@@ -53,8 +53,24 @@ def run_app() -> int:
         window = StudentMainWindow(api, user_id=login.user_id,
                                    display_name=login.display_name)
 
+    # 修复"登入后窗口不显示但进程还在"：窗口其实已创建，只是被挡在后面或
+    # 因旧的几何位置跑到屏外看不见。三道保险：持久引用防回收 + 强制置顶激活 + 离屏拽回主屏。
+    app._main_window = window
+    _ensure_on_screen(window)
     window.show()
+    window.raise_()
+    window.activateWindow()
     return app.exec_()
+
+
+def _ensure_on_screen(window):
+    """窗口左上角若不在主屏可用区域内，移回主屏左上，避免因旧几何位置看不见。"""
+    screen = QApplication.primaryScreen()
+    if screen is None:
+        return
+    avail = screen.availableGeometry()
+    if not avail.contains(window.frameGeometry().topLeft()):
+        window.move(avail.topLeft())
 
 
 if __name__ == '__main__':
