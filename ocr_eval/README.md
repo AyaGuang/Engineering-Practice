@@ -109,13 +109,16 @@ pip install -r requirements.txt
 从 [PaddleOCR 模型列表](https://paddlepaddle.github.io/PaddleOCR/latest/version3.x/module_usage/text_recognition.html) 下载推理模型（`.tar` 格式），解压后放置到：
 
 ```
-F:/ustc_course/ocr/
-├── PaddleOCR/
+<你的工作区>/
+├── PaddleOCR/                       # PaddleOCR 仓库检出（含推理模型）
 │   └── models/
-│       ├── PP-OCRv6_medium_rec/              # v6 medium（默认）
-│       └── PP-OCRv5_server_rec_infer/        # v5 server（版本对比）
-└── ocr_eval/
+│       ├── PP-OCRv6_medium_rec/      # v6 medium（默认）
+│       └── PP-OCRv5_server_rec_infer/# v5 server（版本对比）
+└── homework_ocr_grader/             # 本仓库
+    └── ocr_eval/                    # 在此目录运行评估脚本
 ```
+
+默认配置（`configs/models/*.yaml` 里的 `model_dir: ../PaddleOCR/models/...`）即假设 `PaddleOCR/` 与本仓库同级。若你的目录布局不同，编辑对应 yaml 的 `model_dir`，或运行时用 `--model_dir` 覆盖；OOV 字典路径同理用 `--dict` 覆盖（缺失时自动跳过 OOV 检查）。
 
 EasyOCR 首次使用时会**自动下载**模型到 `~/.EasyOCR/model/`，无需手动配置。
 
@@ -124,7 +127,7 @@ EasyOCR 首次使用时会**自动下载**模型到 `~/.EasyOCR/model/`，无需
 ### 1. 转换数据集
 
 ```bash
-cd F:/ustc_course/ocr/ocr_eval
+cd homework_ocr_grader/ocr_eval
 
 # 试运行（前 100 条）
 python scripts/run_convert.py --demo
