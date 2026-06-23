@@ -109,26 +109,8 @@ def start_frontend():
     sys.path.insert(0, FRONTEND_DIR)
     os.chdir(FRONTEND_DIR)
 
-    from PyQt5.QtWidgets import QApplication, QMessageBox, QSplashScreen
-    from PyQt5.QtGui import QPixmap, QFont
-    from PyQt5.QtCore import Qt
-
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
-    app = QApplication(sys.argv)
-    app.setApplicationName("手写作业OCR批改系统")
-
-    # 加载样式表
-    style_path = os.path.join(FRONTEND_DIR, 'ui', 'resources', 'style.qss')
-    if os.path.exists(style_path):
-        with open(style_path, 'r', encoding='utf-8') as f:
-            app.setStyleSheet(f.read())
-
-    from ui.main_window import MainWindow
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    from app_bootstrap import run_app
+    sys.exit(run_app())
 
 
 def main():

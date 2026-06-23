@@ -12,6 +12,9 @@ from ui.answer_panel import AnswerPanel
 from ui.result_panel import ResultPanel
 from ui.history_panel import HistoryPanel
 from ui.settings_dialog import SettingsDialog
+from ui.assignment_panel import AssignmentPanel
+from ui.review_panel import ReviewPanel
+from ui.user_manage_panel import UserManagePanel
 from api_client import ApiClient
 
 
@@ -26,15 +29,18 @@ class GradeWorker(QThread):
     finished = pyqtSignal(dict)
     error = pyqtSignal(str)
 
-    def __init__(self, api_client, file_id, questions):
+    def __init__(self, api_client, file_id, questions,
+                 enable_llm_correction=False):
         super().__init__()
         self._api = api_client
         self._file_id = file_id
         self._questions = questions
+        self._enable_llm_correction = enable_llm_correction
 
     def run(self):
         try:
-            result = self._api.grade(self._file_id, self._questions)
+            result = self._api.grade(self._file_id, self._questions,
+                                     enable_llm_correction=self._enable_llm_correction)
             if 'error' in result:
                 self.error.emit(result['error'])
             else:
@@ -51,9 +57,10 @@ class GradeWorker(QThread):
 * 2026.02.04
 """
 class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, api_client=None, user_id=None, parent=None):
         super().__init__(parent)
-        self._api = ApiClient()
+        self._api = api_client or ApiClient()
+        self._user_id = user_id
         self._file_id = None
         self._grade_result = None
         self._worker = None
@@ -75,7 +82,7 @@ class MainWindow(QMainWindow):
 
         # 创建面板
         self._image_panel = ImagePanel()
-        self._answer_panel = AnswerPanel()
+        self._answer_panel = AnswerPanel(api_client=self._api)
         self._result_panel = ResultPanel()
 
         # 右侧：答案面板 + 结果面板
@@ -95,7 +102,19 @@ class MainWindow(QMainWindow):
         # ====== Tab2: 历史记录页面 ======
         self._history_panel = HistoryPanel(self._api)
 
+        # ====== Tab3: 作业管理（教师维护作业/标准答案）======
+        self._assignment_panel = AssignmentPanel(self._api)
+
+        # ====== Tab4: 待审核（学生提交 → 教师改分/发布）======
+        self._review_panel = ReviewPanel(self._api)
+
+        # ====== Tab5: 账号管理（增删学生/教师账号）======
+        self._user_panel = UserManagePanel(self._api)
+
         self._tabs.addTab(grading_widget, "作业批改")
+        self._tabs.addTab(self._assignment_panel, "作业管理")
+        self._tabs.addTab(self._review_panel, "待审核")
+        self._tabs.addTab(self._user_panel, "账号管理")
         self._tabs.addTab(self._history_panel, "历史记录")
 
         self.setCentralWidget(self._tabs)
@@ -138,7 +157,8 @@ class MainWindow(QMainWindow):
 
         act_history = QAction("历史记录", self)
         act_history.setShortcut("Ctrl+H")
-        act_history.triggered.connect(lambda: self._tabs.setCurrentIndex(1))
+        act_history.triggered.connect(
+            lambda: self._tabs.setCurrentWidget(self._history_panel))
         toolbar.addAction(act_history)
 
         toolbar.addSeparator()
@@ -179,11 +199,18 @@ class MainWindow(QMainWindow):
 
         act_history = QAction("历史记录", self)
         act_history.setShortcut("Ctrl+H")
-        act_history.triggered.connect(lambda: self._tabs.setCurrentIndex(1))
+        act_history.triggered.connect(
+            lambda: self._tabs.setCurrentWidget(self._history_panel))
         view_menu.addAction(act_history)
 
+        act_review = QAction("待审核", self)
+        act_review.triggered.connect(
+            lambda: self._tabs.setCurrentWidget(self._review_panel))
+        view_menu.addAction(act_review)
+
         act_grading = QAction("批改页面", self)
-        act_grading.triggered.connect(lambda: self._tabs.setCurrentIndex(0))
+        act_grading.triggered.connect(
+            lambda: self._tabs.setCurrentWidget(self._tabs.widget(0)))
         view_menu.addAction(act_grading)
 
         help_menu = menubar.addMenu("帮助")
@@ -196,8 +223,16 @@ class MainWindow(QMainWindow):
         result = self._api.health_check()
         if result.get('status') == 'ok':
             self._statusbar.showMessage("后端服务已连接 - 就绪")
+            self._sync_settings_to_panel()
         else:
             self._statusbar.showMessage("警告: 后端服务未启动，请先运行 backend/app.py")
+
+    def _sync_settings_to_panel(self):
+        """从后端设置同步AI纠错默认值到答案面板的快捷开关"""
+        result = self._api.get_settings()
+        if 'error' not in result:
+            self._answer_panel.set_llm_correction_enabled(
+                bool(result.get('enable_llm_correction', False)))
 
     def _open_image(self):
         self._tabs.setCurrentIndex(0)
@@ -237,10 +272,14 @@ class MainWindow(QMainWindow):
             for q in questions
         ]
 
-        self._statusbar.showMessage("正在识别与批改中，请稍候...")
+        enable_correction = self._answer_panel.is_llm_correction_enabled()
+
+        self._statusbar.showMessage("正在识别与批改中，请稍候..."
+                                    + (" (已启用AI纠错)" if enable_correction else ""))
         QApplication.processEvents()
 
-        self._worker = GradeWorker(self._api, self._file_id, q_data)
+        self._worker = GradeWorker(self._api, self._file_id, q_data,
+                                   enable_llm_correction=enable_correction)
         self._worker.finished.connect(self._on_grade_done)
         self._worker.error.connect(self._on_grade_error)
         self._worker.start()
@@ -305,9 +344,11 @@ class MainWindow(QMainWindow):
         self._statusbar.showMessage(f"报告已导出: {path}")
 
     def _open_settings(self):
-        """打开AI纠错设置对话框"""
+        """打开设置对话框，保存成功后同步首页AI纠错开关"""
         dialog = SettingsDialog(self._api, self)
-        dialog.exec_()
+        if dialog.exec_() == dialog.Accepted:
+            # 设置已保存，重新同步默认值到首页快捷开关
+            self._sync_settings_to_panel()
 
     def _show_about(self):
         QMessageBox.about(self, "关于",

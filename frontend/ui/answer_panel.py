@@ -3,7 +3,8 @@ import json
 from dataclasses import dataclass
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTableWidget, QTableWidgetItem,
-                             QComboBox, QHeaderView, QFileDialog, QMessageBox)
+                             QComboBox, QHeaderView, QFileDialog, QMessageBox,
+                             QCheckBox)
 from PyQt5.QtCore import Qt
 
 import config
@@ -46,8 +47,9 @@ class QuestionData:
 """
 class AnswerPanel(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, api_client=None, parent=None):
         super().__init__(parent)
+        self._api = api_client
         self._init_ui()
 
     def _init_ui(self):
@@ -82,7 +84,19 @@ class AnswerPanel(QWidget):
         for btn in [btn_add, btn_del, btn_load, btn_save]:
             btn_layout.addWidget(btn)
 
+        # 接入 api_client（教师端）时提供"存为作业"按钮，把当前答案持久化为作业
+        if self._api is not None:
+            btn_save_hw = QPushButton("存为作业")
+            btn_save_hw.setToolTip("把当前标准答案保存为一份作业（供学生提交）")
+            btn_save_hw.clicked.connect(self._save_as_assignment)
+            btn_layout.addWidget(btn_save_hw)
+
         btn_layout.addStretch()
+
+        self._llm_checkbox = QCheckBox("启用 AI 纠错")
+        self._llm_checkbox.setToolTip('使用 LLM 纠正 OCR 识别中的明显错误\n'
+                                      '默认值可在【设置】中配置，此处可临时切换')
+        btn_layout.addWidget(self._llm_checkbox)
 
         layout.addLayout(btn_layout)
 
@@ -138,6 +152,67 @@ class AnswerPanel(QWidget):
             ))
         return questions
 
+    def is_llm_correction_enabled(self) -> bool:
+        """是否启用了LLM纠错（本次批改的快捷开关）"""
+        return self._llm_checkbox.isChecked()
+
+    def set_llm_correction_enabled(self, enabled: bool) -> None:
+        """设置LLM纠错复选框状态（用于同步设置默认值）"""
+        self._llm_checkbox.setChecked(bool(enabled))
+
+    def _add_row_from_dict(self, q_data: dict):
+        """根据字典在表格末尾插入一行：{number,type,answer,points}"""
+        row = self._table.rowCount()
+        self._table.insertRow(row)
+
+        num_item = QTableWidgetItem(str(q_data.get('number', row + 1)))
+        num_item.setTextAlignment(Qt.AlignCenter)
+        self._table.setItem(row, 0, num_item)
+
+        combo = QComboBox()
+        combo.addItems(TYPE_NAMES)
+        q_type_str = q_data.get('type', 'fill_blank')
+        combo.setCurrentText(VALUE_TYPE_MAP.get(q_type_str, '填空题'))
+        self._table.setCellWidget(row, 1, combo)
+
+        self._table.setItem(row, 2, QTableWidgetItem(q_data.get('answer', '')))
+
+        pts_item = QTableWidgetItem(str(q_data.get('points', 1.0)))
+        pts_item.setTextAlignment(Qt.AlignCenter)
+        self._table.setItem(row, 3, pts_item)
+
+    def set_questions(self, questions: list):
+        """从字典列表填充表格：[{number,type,answer,points}, ...]"""
+        self._table.setRowCount(0)
+        for q_data in questions:
+            self._add_row_from_dict(q_data)
+
+    def get_questions_dicts(self) -> list:
+        """返回标准答案的 dict 列表（用于作业 API）"""
+        return [
+            {"number": q.number, "type": q.q_type,
+             "answer": q.standard_answer, "points": q.points}
+            for q in self.get_questions()
+        ]
+
+    def _save_as_assignment(self):
+        """把当前答案保存为作业（教师端）"""
+        if self._api is None:
+            return
+        from PyQt5.QtWidgets import QInputDialog
+        name, ok = QInputDialog.getText(self, "存为作业", "请输入作业名称：")
+        if not ok or not name.strip():
+            return
+        questions = self.get_questions_dicts()
+        if not questions:
+            QMessageBox.warning(self, "提示", "请先设置标准答案")
+            return
+        result = self._api.create_assignment(name.strip(), questions)
+        if 'error' in result:
+            QMessageBox.warning(self, "失败", result['error'])
+        else:
+            QMessageBox.information(self, "成功", f"已存为作业：{name.strip()}")
+
     def _save_template(self):
         path, _ = QFileDialog.getSaveFileName(self, "保存答案模板", "",
                                               config.TEMPLATE_FILTER)
@@ -173,22 +248,4 @@ class AnswerPanel(QWidget):
 
         self._table.setRowCount(0)
         for q_data in data.get('questions', []):
-            row = self._table.rowCount()
-            self._table.insertRow(row)
-
-            num_item = QTableWidgetItem(str(q_data.get('number', row + 1)))
-            num_item.setTextAlignment(Qt.AlignCenter)
-            self._table.setItem(row, 0, num_item)
-
-            combo = QComboBox()
-            combo.addItems(TYPE_NAMES)
-            q_type_str = q_data.get('type', 'fill_blank')
-            display_name = VALUE_TYPE_MAP.get(q_type_str, '填空题')
-            combo.setCurrentText(display_name)
-            self._table.setCellWidget(row, 1, combo)
-
-            self._table.setItem(row, 2, QTableWidgetItem(q_data.get('answer', '')))
-
-            pts_item = QTableWidgetItem(str(q_data.get('points', 1.0)))
-            pts_item.setTextAlignment(Qt.AlignCenter)
-            self._table.setItem(row, 3, pts_item)
+            self._add_row_from_dict(q_data)
