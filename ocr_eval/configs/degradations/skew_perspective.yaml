@@ -1,0 +1,5 @@
+# 旋转+透视（手持拍摄 + 纸张弯曲）
+name: skew_perspective
+max_angle: 5.0
+perspective_strength: 0.02
+seed: 42

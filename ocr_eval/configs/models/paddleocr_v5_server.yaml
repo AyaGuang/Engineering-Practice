@@ -1,0 +1,8 @@
+# PaddleOCR PP-OCRv5 server（上一代服务端模型）
+# 用于与 PP-OCRv6 medium 形成版本演进对比
+backend: paddleocr
+model_name: PP-OCRv5_server_rec   # 必须与 inference.yml 中的 model_name 匹配
+model_dir: ../PaddleOCR/models/PP-OCRv5_server_rec_infer
+batch_size: 32
+display_name: PP-OCR-v5
+description: "PP-OCRv5 server 中文识别（上一代 baseline）"

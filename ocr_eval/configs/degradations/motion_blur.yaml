@@ -1,0 +1,5 @@
+# 运动模糊（手持拍摄抖动）
+name: motion_blur
+kernel_size: 7
+angle_range: [0.0, 360.0]
+seed: 42

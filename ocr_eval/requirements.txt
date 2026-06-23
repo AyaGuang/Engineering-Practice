@@ -1,0 +1,25 @@
+# ocr_eval 依赖清单
+# 安装：pip install -r requirements.txt
+
+# ===== 基础依赖（所有 backend 共用） =====
+pyarrow>=14.0.0
+PyYAML>=6.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# ===== PaddleOCR backend 依赖 =====
+# 请先安装 PaddlePaddle（CPU 或 GPU 版），再装 paddleocr：
+#   GPU 版（推荐）：
+#     python -m pip install paddlepaddle-gpu==3.3.1 \
+#       -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
+#   CPU 版：
+#     pip install paddlepaddle==3.3.1
+paddleocr>=3.7.0
+
+# ===== EasyOCR backend 依赖 =====
+# 首次运行会自动下载中文模型（~100MB）到 ~/.EasyOCR/model/
+easyocr>=1.7.0
+
+# ===== TrOCR backend 依赖（可选，按需安装） =====
+# 安装命令：pip install -r requirements-trocr.txt
+# 单独文件以便 PaddleOCR-only 用户跳过

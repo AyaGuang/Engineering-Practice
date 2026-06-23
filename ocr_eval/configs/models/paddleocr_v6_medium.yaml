@@ -1,0 +1,7 @@
+# PaddleOCR PP-OCRv6 medium 配置示例
+backend: paddleocr
+model_name: PP-OCRv6_medium_rec
+model_dir: ../PaddleOCR/models/PP-OCRv6_medium_rec
+batch_size: 64
+display_name: PaddleOCR
+description: "PP-OCRv6 medium 中文识别（baseline）"

@@ -1,0 +1,7 @@
+# 低光照 + 感光噪点（晚上台灯下拍作业）
+name: low_light
+brightness: 0.5
+color_temp_k: 2800
+vignette_strength: 0.4
+noise_std: 8.0
+noise_seed: 42

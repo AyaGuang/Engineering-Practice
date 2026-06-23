@@ -1,0 +1,9 @@
+# EasyOCR 配置（ch_sim + en，首次运行自动下载模型）
+backend: easyocr
+# model_dir 留空：EasyOCR 自己管理模型路径
+# 模型会下载到 ~/.EasyOCR/model 目录
+langs: ["ch_sim", "en"]
+gpu: true
+batch_size: 8
+display_name: EasyOCR
+description: "EasyOCR 中英双语（CRNN + CTC）"

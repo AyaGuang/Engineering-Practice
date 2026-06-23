@@ -1,0 +1,7 @@
+# TrOCR backend 可选依赖
+# 安装：pip install -r requirements-trocr.txt
+# 注意：torch + transformers 约 2.5GB 磁盘空间
+
+torch>=2.1.0
+transformers>=4.36.0
+Pillow>=10.0.0
