@@ -1,6 +1,10 @@
 """ocr_eval.report - 评估报告输出
 
 控制台友好输出 + JSON 持久化。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 import json
 from pathlib import Path

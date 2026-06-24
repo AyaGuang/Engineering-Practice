@@ -2,6 +2,10 @@
 
 扫描 configs/models/ 与 configs/degradations/ 下的 yaml 配置，
 自动跑所有组合，输出矩阵报告。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 import argparse
 import sys

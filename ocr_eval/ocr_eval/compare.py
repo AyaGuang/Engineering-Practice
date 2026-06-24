@@ -1,4 +1,9 @@
-"""ocr_eval.compare - 多模型/多退化对比汇总"""
+"""ocr_eval.compare - 多模型/多退化对比汇总
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
+"""
 import json
 from pathlib import Path
 from typing import Optional

@@ -1,6 +1,10 @@
 """ocr_eval.visualize - 退化效果可视化
 
 生成 before/after 对比图，便于肉眼检查退化参数是否合理。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from pathlib import Path
 

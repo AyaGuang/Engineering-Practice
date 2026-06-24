@@ -2,6 +2,10 @@
 
 所有具体的 OCR 模型（PaddleOCR、TrOCR、MMOCR 等）都应实现此接口，
 让上层评估代码与具体模型解耦（SOLID-D：依赖抽象）。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from abc import ABC, abstractmethod
 from typing import Any

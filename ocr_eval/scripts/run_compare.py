@@ -1,6 +1,10 @@
 """ocr_eval.scripts.run_compare - 多模型对比（不退化）
 
 简化版的矩阵评估：只跑 clean，对比多个模型。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 import argparse
 import sys

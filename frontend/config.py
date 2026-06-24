@@ -1,4 +1,10 @@
-"""前端配置"""
+"""
+* 前端配置 - 后端 API 地址与各类文件对话框过滤器
+* 被 api_client / 各 UI 面板通过 import config 引用
+* create by 林嘉晨
+* copyright USTC
+* 2026.03.13
+"""
 
 # 后端API地址
 API_BASE_URL = 'http://127.0.0.1:5000'

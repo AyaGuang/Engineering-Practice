@@ -4,6 +4,10 @@
 - acc: 完全匹配准确率
 - norm_edit_dis: 归一化编辑距离（字符级相似度）
 - 长度分布准确率
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from collections import defaultdict
 from typing import Iterable

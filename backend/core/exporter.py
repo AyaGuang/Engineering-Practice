@@ -1,4 +1,10 @@
-"""导出模块 - 支持CSV和HTML报告"""
+"""
+* 报告导出模块 - 将批改结果导出为 CSV / HTML 报告
+* 提供 export_csv / export_html 两个接口，供 /api/export 调用
+* create by 廖帅
+* copyright USTC
+* 2026.03.13
+"""
 import csv
 import os
 from models.result import GradingReport

@@ -5,6 +5,10 @@ EasyOCR 是 JaidedAI 开源的多语言 OCR，基于 PyTorch + CRNN + CTC。
 
 注意：EasyOCR 默认是 detection + recognition pipeline。
 本 backend 通过调整参数让裁好的单行文本图也能正确识别（合并为一段）。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from typing import Any
 

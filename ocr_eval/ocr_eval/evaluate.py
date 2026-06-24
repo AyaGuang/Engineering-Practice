@@ -1,6 +1,10 @@
 """ocr_eval.evaluate - 评估主流程（支持 backend + degradation）
 
 通过依赖注入接收 backend 名称与退化名称，让评估流程与具体模型/退化解耦。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 import time
 from pathlib import Path

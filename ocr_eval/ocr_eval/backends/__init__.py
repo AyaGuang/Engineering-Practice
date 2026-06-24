@@ -2,6 +2,10 @@
 
 通过名称（如 "paddleocr"、"trocr"、"easyocr"）获取 backend 类，
 让上层代码与具体模型解耦。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from typing import Type
 

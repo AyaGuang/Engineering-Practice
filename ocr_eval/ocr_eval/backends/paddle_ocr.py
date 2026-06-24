@@ -1,4 +1,9 @@
-"""ocr_eval.backends.paddle_ocr - PaddleOCR 后端实现"""
+"""ocr_eval.backends.paddle_ocr - PaddleOCR 后端实现
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
+"""
 from typing import Any
 
 import numpy as np

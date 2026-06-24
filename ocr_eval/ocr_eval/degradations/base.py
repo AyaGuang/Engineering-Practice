@@ -2,6 +2,10 @@
 
 所有具体的退化（低光照、模糊、旋转等）都实现此接口，
 让评估代码可以灵活组合不同的退化（SOLID-O：对扩展开放）。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from abc import ABC, abstractmethod
 from typing import Any

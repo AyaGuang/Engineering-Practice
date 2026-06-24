@@ -7,6 +7,10 @@ transformer 的 OCR 模型，HuggingFace transformers 库提供实现。
 - 官方 microsoft/trocr-base-print 是英文模型，中文识别准确率较低
 - 中文场景建议使用社区微调版本（如 Shoukan/TrOCR-zh 等）
 - 依赖 torch + transformers（约 2.5GB），默认不安装，按需启用
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from typing import Any
 

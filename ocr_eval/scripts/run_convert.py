@@ -12,6 +12,10 @@
         --parquet data/custom.parquet \\
         --out_dir output/custom \\
         --dict /path/to/paddleocr/utils/dict/ppocrv6_dict.txt
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 import argparse
 import sys

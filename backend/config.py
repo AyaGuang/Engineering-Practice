@@ -1,4 +1,10 @@
-"""后端配置"""
+"""
+* 后端配置 - 服务端口、上传限制、OCR 与批改阈值、数据库名等常量
+* 被 app.py / core / database 等模块通过 import config 引用
+* create by 廖帅
+* copyright USTC
+* 2026.03.13
+"""
 import os
 
 # 服务器配置

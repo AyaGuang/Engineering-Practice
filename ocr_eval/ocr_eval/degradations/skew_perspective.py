@@ -1,6 +1,10 @@
 """ocr_eval.degradations.skew_perspective - 小角度旋转 + 轻微透视
 
 模拟：手持拍摄轻抖 + 纸张弯曲/不平整
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from typing import Any
 

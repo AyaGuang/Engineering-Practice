@@ -2,6 +2,10 @@
 
 模拟：手、笔、手机等物体在纸面上投下的条带状阴影
 实现：生成带羽化边缘的随机矩形阴影，用 alpha 混合叠加到原图
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from typing import Any
 

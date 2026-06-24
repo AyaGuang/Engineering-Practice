@@ -1,6 +1,10 @@
 """ocr_eval.degradations - 图像退化注册表
 
 通过名称获取退化实例。返回 None 表示"不退化"（clean）。
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from typing import Optional, Type
 

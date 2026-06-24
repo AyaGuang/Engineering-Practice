@@ -14,6 +14,10 @@ PaddleOCR 评估所需的格式：
       }
       optional binary text (String);
     }
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 from pathlib import Path
 

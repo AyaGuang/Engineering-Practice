@@ -1,4 +1,9 @@
-"""扫描 reports/ 目录，找出 num_samples != 10000 的组合，自动补跑"""
+"""扫描 reports/ 目录，找出 num_samples != 10000 的组合，自动补跑
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
+"""
 import sys
 import subprocess
 from pathlib import Path

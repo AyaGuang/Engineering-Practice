@@ -9,6 +9,10 @@
 
     # 含可视化对比图
     python scripts/run_evaluate.py --degradation blur_compress --save_samples 10
+
+* create by 林文光
+* copyright USTC
+* 2026.06.23
 """
 import argparse
 import sys
