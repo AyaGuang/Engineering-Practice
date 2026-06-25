@@ -1,0 +1,27 @@
+﻿@startuml 6-1
+' --- 环境设置 ---
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam RoundCorner 10
+skinparam defaultFontName "SimSun"
+
+' --- 样式定义 ---
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2E86C1
+    BorderColor #2E86C1
+    HeaderBackgroundColor #EBF5FB
+}
+
+title "作业OCR自动批改系统 - 前端数据类"
+
+' --- 数据类定义 ---
+class QuestionData <<dataclass>> {
+    + number: int
+    + q_type: str
+    + standard_answer: str
+    + points: float = 1.0
+}
+
+
+@enduml

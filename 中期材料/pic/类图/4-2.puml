@@ -1,0 +1,75 @@
+﻿@startuml 4-2
+' --- 环境设置 ---
+' skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam RoundCorner 10
+skinparam defaultFontName "SimSun"
+' 增加层级间距
+skinparam ranksep 45
+' 增加组件间距
+skinparam nodesep 50
+
+' --- 样式定义 ---
+skinparam component {
+    BackgroundColor white
+    BorderColor #1976D2
+    ArrowColor #2E4053
+}
+
+title "核心服务协作流水线 (数据流向图)"
+
+' --- 定义节点 ---
+
+component "Flask API 入口" as api #E3F2FD
+
+package "核心处理流水线" {
+    component "Preprocessor\n(图像预处理)" as prep #FFF3E0
+    component "OcrEngine\n(文字识别)" as ocr #FFF3E0
+    component "Parser\n(结果解析)" as parser #FFF3E0
+    component "Grader\n(批改引擎)" as grader #FFF3E0
+    component "Exporter\n(结果导出)" as exp #FFF3E0
+}
+
+database "SQLite 数据库" as db #D5F5E3
+
+' --- 外部依赖 (分布在左侧) ---
+package "支撑库" #F8F9F9 {
+    [OpenCV] as cv2
+    [PaddleOCR] as paddle
+    [FuzzyWuzzy] as fuzzy
+}
+
+' --- 核心协作流程 (垂直向下，唯一主线) ---
+
+api -down-> prep : 1. 作业图片路径
+prep -down-> ocr : 2. 预处理后的图片
+ocr -down-> parser : 3. List[OcrResult]
+parser -down-> grader : 4. Dict[题号, 答案]
+grader -down-> exp : 5. GradingReport 结果对象
+exp -down-> api : 6. 返回导出文件/流
+
+' --- 数据持久化 (侧向连接) ---
+grader -right-> db : 存储批改记录
+
+' --- 技术依赖 (虚线标注，不干扰主线) ---
+cv2 <.right. prep
+paddle <.right. ocr
+fuzzy <.right. grader
+
+' --- 数据状态说明 (右侧标注) ---
+note right of ocr
+  **数据状态 A:**
+  原始文本 & 坐标
+end note
+
+note right of parser
+  **数据状态 B:**
+  结构化题号映射
+end note
+
+note right of grader
+  **数据状态 C:**
+  得分、正误、百分比
+end note
+
+@enduml

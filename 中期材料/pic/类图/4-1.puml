@@ -1,0 +1,78 @@
+﻿@startuml 4-1
+' --- 环境设置 ---
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam RoundCorner 10
+skinparam defaultFontName "SimSun"
+skinparam class {
+    BackgroundColor white
+    ArrowColor #D35400
+    BorderColor #D35400
+    HeaderBackgroundColor #FFF3E0
+}
+
+title "作业OCR自动批改系统 - 后端核心服务类图"
+
+' --- 外部依赖库 ---
+package "外部依赖 (External Libs)" #F5F5F5 {
+    class "PaddleOCR" as Paddle <<Library>> #FEF9E7
+    class "OpenCV (cv2)" as CV2 <<Library>> #FEF9E7
+    class "FuzzyWuzzy" as Fuzzy <<Library>> #FEF9E7
+}
+
+' --- 核心服务模块 ---
+package "核心服务 (Core Services)" {
+
+    class Preprocessor {
+        + preprocess(path: str): np.ndarray
+        + to_grayscale(img: np.ndarray): np.ndarray
+        + denoise(gray: np.ndarray): np.ndarray
+        + deskew(gray: np.ndarray): np.ndarray
+        + binarize(gray: np.ndarray): np.ndarray
+    }
+
+    class OcrEngine {
+        - _ocr_instance: PaddleOCR
+        + get_ocr(): PaddleOCR
+        + recognize(image: np.ndarray): List[OcrResult]
+    }
+
+    class Parser {
+        + parse_answers(ocr_results: List[OcrResult]): Dict[int, str]
+    }
+
+    class Grader {
+        + grade_all(parsed: Dict[int, str], questions: List[Question]): GradingReport
+        + grade_fill_blank(recognized: str, question: Question): Tuple[bool, float]
+        + grade_multiple_choice(recognized: str, question: Question): Tuple[bool, float]
+        + grade_calculation(recognized: str, question: Question): Tuple[bool, float]
+    }
+
+    class Exporter {
+        + export_csv(results: GradingReport): str
+        + export_html(results: GradingReport): str
+    }
+}
+
+' --- 入口点 ---
+class "Flask API (app.py)" as App <<Entry>> #E3F2FD
+
+' --- 交互关系 ---
+
+' API 调用核心服务
+App ..> Preprocessor : 1. 调用
+App ..> OcrEngine : 2. 调用
+App ..> Parser : 3. 调用
+App ..> Grader : 4. 调用
+App ..> Exporter : 5. 导出
+
+' 核心服务依赖外部库
+Preprocessor ..> CV2 : 使用
+OcrEngine ..> Paddle : 封装
+Grader ..> Fuzzy : 模糊匹配
+
+' 数据流向标注 (可选)
+note top of Parser : 将 OCR 文本转换为\n{题号: 答案} 映射
+note top of Grader : 执行核心批改逻辑\n计算得分
+
+@enduml

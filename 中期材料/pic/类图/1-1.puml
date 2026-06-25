@@ -1,0 +1,55 @@
+﻿@startuml 1-1
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName "SimSun"
+skinparam RoundCorner 10
+
+' 颜色定义
+!define BACKEND_COLOR #E3F2FD
+!define FRONTEND_COLOR #F1F8E9
+!define CORE_COLOR #FFF3E0
+
+title 作业OCR自动批改系统 - 系统架构与协作
+
+node "启动器 (Launcher)" as launcher #F5F5F5 {
+    component "Flask Backend" as flask <<Process>>
+    component "PyQt5 Frontend" as pyqt <<Process>>
+}
+
+package "后端服务层"  BACKEND_COLOR {
+    [Flask API (app.py)] as api
+    [SQLite DB] as db #white
+}
+
+package "核心逻辑模块"  CORE_COLOR {
+    [Preprocessor] as prep
+    [OcrEngine] as ocr
+    [Parser] as parser
+    [Grader] as grader
+    [Exporter] as exp
+}
+
+package "前端应用层"  FRONTEND_COLOR {
+    [APIClient] as client
+    [UI Components] as ui
+}
+
+' 关系流
+launcher --> flask : 启动
+launcher --> pyqt : 启动
+
+pyqt -down-> client
+client -right-> api : REST API (JSON)
+
+api -down-> prep
+api -down-> ocr
+api -down-> parser
+api -down-> grader
+api -down-> exp
+
+prep -[hidden]right- ocr
+ocr -[hidden]right- parser
+
+api -right-> db : 持久化
+@enduml

@@ -1,0 +1,17 @@
+﻿@startuml 4-1
+skinparam activityShape roundBox
+
+start
+:用户选择图片;
+:上传图片;
+:图像预处理;
+:OCR识别;
+:文本解析;
+:答案比对;
+fork
+    :生成报告;
+fork again
+    :存入数据库;
+end fork
+stop
+@enduml

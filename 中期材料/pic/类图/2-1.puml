@@ -1,0 +1,72 @@
+﻿@startuml 2-1
+' 设置透明背景
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam class {
+    BackgroundColor white
+    ArrowColor #1976D2
+    BorderColor #1976D2
+    HeaderBackgroundColor #E3F2FD
+}
+skinparam defaultFontName "SimSun"
+skinparam RoundCorner 10
+
+title "作业OCR自动批改系统 - 后端数据模型"
+
+' 1. 题型枚举
+enum QuestionType <<enumeration>> {
+    FILL_BLANK
+    MULTIPLE_CHOICE
+    CALCULATION
+    --
+    + display_name: str
+}
+
+' 2. OCR 原始结果
+class OcrResult <<dataclass>> {
+    + bbox: List[List[int]]
+    + text: str
+    + confidence: float
+}
+
+' 3. 题目定义
+class Question <<dataclass>> {
+    + number: int
+    + q_type: QuestionType
+    + standard_answer: str
+    + points: float
+    + accept_alternatives: List[str]
+}
+
+' 4. 单题批改结果
+class QuestionResult <<dataclass>> {
+    + question: Question
+    + recognized_text: str
+    + is_correct: bool
+    + match_score: float
+    + earned_points: float
+}
+
+' 5. 完整批改报告
+class GradingReport <<dataclass>> {
+    + results: List[QuestionResult]
+    + total_points: float
+    + earned_points: float
+    + percentage: float
+}
+
+' --- 关系定义 ---
+
+' 题目类型关联
+Question "1" *-right- "1" QuestionType : 包含类型
+
+' 批改结果引用题目定义
+QuestionResult "1" o-down- "1" Question : 引用题目信息
+
+' 报告包含多个题目结果
+GradingReport "1" *-- "1..*" QuestionResult : 汇总结果
+
+' 布局辅助：将 OcrResult 放在一边，因为它属于中间产物
+OcrResult -[hidden]down- Question
+
+@enduml

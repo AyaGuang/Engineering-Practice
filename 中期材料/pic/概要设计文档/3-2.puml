@@ -1,0 +1,24 @@
+﻿@startwbs 3-2
+<style>
+wbsDiagram {
+  BackgroundColor white
+  LineColor black
+}
+</style>
+* launcher.py
+** backend/app.py
+*** backend/core/ocr_engine.py\n<color:blue>→ PaddleOCR</color>
+*** backend/core/preprocessor.py\n<color:blue>→ OpenCV</color>
+*** backend/core/parser.py
+*** backend/core/grader.py\n<color:blue>→ FuzzyWuzzy</color>
+*** backend/core/exporter.py
+*** backend/database.py\n<color:blue>→ SQLAlchemy → SQLite</color>
+** frontend/main.py
+*** frontend/api_client.py\n<color:blue>→ requests</color>
+*** frontend/ui/
+**** main_window.py
+**** image_panel.py
+**** answer_panel.py
+**** result_panel.py
+**** history_panel.py
+@endwbs

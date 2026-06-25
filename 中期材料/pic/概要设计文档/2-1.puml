@@ -1,0 +1,38 @@
+@startuml "前后端分离的 C/S 架构图"
+skinparam componentStyle rectangle
+skinparam backgroundColor white
+
+package "前端 (PyQt5 桌面应用)" as frontend {
+    component [图片面板] as img_panel
+    component [答案面板] as ans_panel
+    component [结果面板] as res_panel
+    component [历史面板] as his_panel
+    component [API Client] as api_client
+    
+    img_panel -[hidden]r-> ans_panel
+    ans_panel -[hidden]r-> res_panel
+    res_panel -[hidden]r-> his_panel
+}
+
+package "后端 (Flask REST API)" as backend {
+    component [路由层 (app.py)] as router
+    package "核心业务层 (core/)" as core {
+        component [OCR引擎] as ocr
+        component [预处理] as pre
+        component [解析器] as parser
+        component [批改引擎] as grader
+    }
+    component [数据层 (database.py)] as dal
+}
+
+database "SQLite 数据库" as db
+
+api_client --> router : " HTTP (127.0.0.1:5000)"
+router --> ocr
+router --> pre
+router --> parser
+router --> grader
+core --> dal
+dal --> db
+
+@enduml

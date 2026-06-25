@@ -1,0 +1,40 @@
+﻿@startuml 6-1
+!define Table(name,desc) entity "name" as desc
+left to right direction
+hide circle
+skinparam linetype ortho
+
+entity "Homework" as hw {
+  * file_id
+  --
+  filename
+  upload_time
+  image_path
+}
+
+entity "GradingRecord" as gr {
+  * record_id
+  --
+  grade_time
+  total_points
+  earned_points
+  percentage
+  ocr_count
+}
+
+entity "QuestionResultRecord" as qrr {
+  * result_id
+  --
+  question_number
+  question_type
+  recognized_text
+  standard_answer
+  is_correct
+  match_score
+  earned_points
+}
+
+hw --o{ gr : "1 : N"
+gr --o{ qrr : "1 : N"
+
+@enduml

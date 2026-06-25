@@ -1,0 +1,84 @@
+﻿@startuml 7-1
+' --- 环境设置 ---
+' skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName "SimSun"
+' 自动对步骤进行编号
+autonumber
+
+' --- 样式定义 ---
+skinparam sequence {
+    ArrowColor #2E4053
+    LifeLineBorderColor #2E4053
+    ParticipantBackgroundColor #E3F2FD
+    ParticipantBorderColor #1976D2
+    ActorBackgroundColor #F5F5F5
+    GroupBackgroundColor #FBFCFC
+}
+
+title "作业OCR自动批改系统 - 完整业务流程时序图"
+
+' --- 参与者定义 ---
+actor "教师 (User)" as Teacher
+participant "MainWindow\n(UI界面)" as UI #F1F8E9
+participant "APIClient\n(前端请求)" as Client #F1F8E9
+participant "Flask App\n(后端网关)" as Server #E3F2FD
+participant "Core Modules\n(核心算法)" as Core #FFF3E0
+database "Database\n(持久化存储)" as DB #D5F5E3
+
+== 1. 图片上传阶段 ==
+
+Teacher -> UI : 1. 选择作业图片
+UI -> Client : 2. upload_image(path)
+activate Client
+Client -> Server : 3. POST /api/upload (Multipart)
+activate Server
+Server -> DB : 4. 存储图片信息 (Homework表)
+Server --> Client : 5. 200 OK (file_id)
+deactivate Server
+Client --> UI : 6. 返回 file_id
+deactivate Client
+UI -> Teacher : 7. 预览图片显示成功
+
+== 2. 核心批改阶段 ==
+
+Teacher -> UI : 8. 输入标准答案，点击“开始批改”
+UI -> Client : 9. grade(file_id, questions)
+activate Client
+Client -> Server : 10. POST /api/grade (JSON)
+activate Server
+
+group 核心批改流水线 [后端执行]
+    Server -> Core : 11. preprocess(image_path)
+    Core --> Server : 返回预处理数组
+    Server -> Core : 12. recognize(image) [OCR识别]
+    Core --> Server : 返回 OcrResult 列表
+    Server -> Core : 13. parse_answers() [解析结构化]
+    Core --> Server : 返回 {题号: 答案}
+    Server -> Core : 14. grade_all() [比对评分]
+    Core --> Server : 返回 GradingReport 报告
+end
+
+Server -> DB : 15. 持久化批改记录 (Record/Results表)
+Server --> Client : 16. 200 OK (GradingReport JSON)
+deactivate Server
+Client --> UI : 17. 传递完整批改结果
+deactivate Client
+UI -> Teacher : 18. 在 ResultPanel 渲染分数与正误
+
+== 3. 报告导出阶段 ==
+
+Teacher -> UI : 19. 点击“导出 CSV/HTML”
+UI -> Client : 20. export_report(file_id, fmt)
+activate Client
+Client -> Server : 21. POST /api/export
+activate Server
+Server -> Core : 22. 执行导出逻辑 (Exporter)
+Core --> Server : 返回文件内容/流
+Server --> Client : 23. 返回文件二进制数据
+deactivate Server
+Client --> UI : 24. 弹出文件保存对话框
+deactivate Client
+UI -> Teacher : 25. 提示保存成功
+
+@enduml

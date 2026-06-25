@@ -1,0 +1,133 @@
+﻿@startuml 5-1
+' --- 环境设置 ---
+' skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam RoundCorner 10
+skinparam defaultFontName "SimSun"
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2E86C1
+    BorderColor #2E86C1
+    HeaderBackgroundColor #EBF5FB
+}
+
+title "作业OCR自动批改系统 - 前端 UI 类图"
+
+' --- 基础库继承 ---
+class "QMainWindow" as QMainWindow <<Qt>> #F8F9F9
+class "QWidget" as QWidget <<Qt>> #F8F9F9
+class "QThread" as QThread <<Qt>> #F8F9F9
+class "QDialog" as QDialog <<Qt>> #F8F9F9
+
+' --- 核心 UI 容器 ---
+class MainWindow {
+    - api_client: APIClient
+    - current_file_id: str
+    - grade_worker: GradeWorker
+    .. 面板引用 ..
+    - image_panel: ImagePanel
+    - answer_panel: AnswerPanel
+    - result_panel: ResultPanel
+    - history_panel: HistoryPanel
+    -- 方法 --
+    + open_image()
+    + start_grading()
+    + on_grade_finished(result: dict)
+    + on_grade_error(msg: str)
+    + export_csv()
+    + export_html()
+    + show_history()
+    + show_about()
+}
+
+' --- 功能面板 ---
+package "UI 功能组件" #F1F8E9 {
+    class ImagePanel {
+        - _original_img: QPixmap
+        - _processed_img: QPixmap
+        - _ocr_results: list
+        + set_image(path: str)
+        + show_ocr(results: list)
+        + clear()
+    }
+
+    class AnswerPanel {
+        - table: QTableWidget
+        - questions: list[QuestionData]
+        + add_row()
+        + del_row()
+        + load_template(path: str)
+        + save_template(path: str)
+        + get_questions(): list
+    }
+
+    class ResultPanel {
+        - table: QTableWidget
+        - summary_label: QLabel
+        + set_results(report: dict)
+        + clear()
+    }
+
+    class HistoryPanel {
+        - api_client: APIClient
+        - search_input: QLineEdit
+        + search()
+        + view_detail(id: int)
+        + delete(id: int)
+        + prev_page()
+        + next_page()
+    }
+}
+
+' --- 弹出对话框 ---
+class DetailDialog {
+    - info_labels: list
+    - result_table: QTableWidget
+}
+
+' --- 逻辑与通信层 ---
+package "逻辑与通信" #FEF9E7 {
+    class APIClient {
+        - base_url: str
+        + upload_image(path): dict
+        + grade(file_id, questions): dict
+        + get_history(...): dict
+        + delete_grading(id): dict
+    }
+
+    class GradeWorker {
+        - api_client: APIClient
+        - file_id: str
+        - questions: list
+        + run()
+        .. 信号 (Signals) ..
+        {field} + finished(dict)
+        {field} + error(str)
+    }
+}
+
+' --- 关系连线 ---
+
+' 继承关系
+MainWindow -up-|> QMainWindow
+ImagePanel -up-|> QWidget
+AnswerPanel -up-|> QWidget
+ResultPanel -up-|> QWidget
+HistoryPanel -up-|> QWidget
+DetailDialog -up-|> QDialog
+GradeWorker -up-|> QThread
+
+' MainWindow 组合关系
+MainWindow *-- ImagePanel
+MainWindow *-- AnswerPanel
+MainWindow *-- ResultPanel
+MainWindow *-- HistoryPanel
+MainWindow *-- APIClient
+
+' 异步协作关系
+MainWindow ..> GradeWorker : "启动异步任务"
+GradeWorker o-- APIClient : "调用接口"
+HistoryPanel o-- APIClient : "查询历史"
+HistoryPanel ..> DetailDialog : "弹出显示"
+
+@enduml

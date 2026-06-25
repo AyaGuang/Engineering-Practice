@@ -1,0 +1,55 @@
+﻿@startuml 2-1
+!theme toy
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam RoundCorner 15
+skinparam defaultFontName "SimSun"
+skinparam backgroundColor transparent
+
+title 作业OCR自动批改系统 - 集成测试策略
+
+' 定义阶段颜色和样式
+skinparam rectangle {
+    BackgroundColor<<P1>> #E3F2FD
+    BackgroundColor<<P2>> #BBDEFB
+    BackgroundColor<<P3>> #90CAF9
+    BackgroundColor<<P4>> #64B5F6
+    BackgroundColor<<P5>> #42A5F5
+    BorderColor #1976D2
+}
+
+' 绘制层级
+package "集成测试层级" {
+
+    rectangle "第五阶段：端到端测试\n--\n完整用户操作流程" as P5 <<P5>>
+
+    rectangle "第四阶段：前后端集成\n--\nPyQt5前端 + Flask API后端" as P4 <<P4>>
+
+    rectangle "第三阶段：API + 数据库集成\n--\nFlask路由 + 核心流水线 + 数据库" as P3 <<P3>>
+
+    rectangle "第二阶段：核心流水线集成\n--\n预处理 → OCR → 解析 → 批改" as P2 <<P2>>
+
+    package "第一阶段：核心模块两两集成" <<P1>> {
+        card "预处理 + OCR引擎" as M1
+        card "OCR引擎 + 解析器" as M2
+        card "解析器 + 批改引擎" as M3
+        card "批改引擎 + 导出器" as M4
+    }
+}
+
+' 箭头逻辑 (自底向上)
+M1 -[hidden]down-> M2
+M2 -[hidden]down-> M3
+M3 -[hidden]down-> M4
+
+P1 -up-> P2 : 组合核心组件
+P2 -up-> P3 : 接入Web服务
+P3 -up-> P4 : 对接UI界面
+P4 -up-> P5 : 交付全流程验证
+
+legend right
+  <b>测试方向</b>
+  ↑ 自底向上集成
+end legend
+
+@enduml

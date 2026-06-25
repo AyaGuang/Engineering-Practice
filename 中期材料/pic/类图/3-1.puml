@@ -1,0 +1,65 @@
+﻿@startuml 3-1
+' --- 环境设置 ---
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam RoundCorner 10
+skinparam defaultFontName "SimSun"
+' 设置类图布局方向从左到右
+left to right direction
+
+' --- 样式定义 ---
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2E4053
+    BorderColor #2E4053
+    HeaderBackgroundColor #ECEFF1
+}
+
+title "作业OCR自动批改系统 - 数据库 ORM 模型"
+
+' --- 类定义 ---
+
+class Homework << (T,#D5F5E3) homeworks >> {
+    + id: Integer [PK]
+    + file_id: String [Unique]
+    + original_filename: String
+    + stored_filename: String
+    + upload_time: DateTime
+    + image_path: String
+    + gradings: List[GradingRecord]
+}
+
+class GradingRecord << (T,#D6EAF8) grading_records >> {
+    + id: Integer [PK]
+    + homework_id: Integer [FK]
+    + grade_time: DateTime
+    + total_points: Float
+    + earned_points: Float
+    + percentage: Float
+    + ocr_count: Integer
+    + homework: Homework
+    + question_results: List[QuestionResultRecord]
+}
+
+class QuestionResultRecord << (T,#FCF3CF) question_results >> {
+    + id: Integer [PK]
+    + grading_id: Integer [FK]
+    + question_number: Integer
+    + question_type: String
+    + question_type_name: String
+    + recognized_text: Text
+    + standard_answer: Text
+    + is_correct: Boolean
+    + match_score: Float
+    + earned_points: Float
+    + total_points: Float
+    -- 关系 --
+    + grading: GradingRecord
+}
+
+' --- 关系连线 (1:N) ---
+
+Homework "1" -- "0..*" GradingRecord : "1 : N 关联"
+GradingRecord "1" -- "1..*" QuestionResultRecord : "1 : N 关联"
+
+@enduml

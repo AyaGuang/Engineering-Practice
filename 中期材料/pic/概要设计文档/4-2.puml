@@ -1,0 +1,29 @@
+﻿@startuml 4-2
+skinparam rectangle {
+    BackgroundColor LightCyan
+    BorderColor DeepSkyBlue
+}
+
+rectangle "作业图片" as pic
+rectangle "服务端存储\n(生成 file_id)" as storage
+rectangle "预处理\n[灰度化 → 去噪 → 纠偏 → 二值化]" as pre
+rectangle "OcrResult列表\n{bbox, text, confidence}" as ocr_res
+rectangle "题号-答案映射\n{1: '北京', 2: 'A', 3: '42'}" as parsed
+rectangle "QuestionResult列表\n{is_correct, match_score, earned_points}" as matched
+rectangle "GradingReport\n{total_points, earned_points, percentage}" as report
+
+rectangle "前端展示" as show
+rectangle "数据库持久化" as db
+rectangle "导出CSV/HTML" as export
+
+pic -down-> storage : 上传
+storage -down-> pre : 预处理
+pre -down-> ocr_res : OCR识别
+ocr_res -down-> parsed : 文本解析
+parsed -down-> matched : 答案比对 + 标准答案
+matched -down-> report : 汇总
+
+report -down-> show
+report -down-> db
+report -down-> export
+@enduml
